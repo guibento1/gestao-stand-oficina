@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Fornecedor - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>✏️ Editar Fornecedor</h1>
+    
+    <div class="card form-card">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="f_nome">Nome *</label>
+                    <input type="text" id="f_nome" name="f_nome" value="{{ fornecedor.f_nome }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_contacto">Contacto *</label>
+                    <input type="text" id="f_contacto" name="f_contacto" value="{{ fornecedor.f_contacto }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_email">Email *</label>
+                    <input type="email" id="f_email" name="f_email" value="{{ fornecedor.f_email }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo *</label>
+                    <select id="tipo" name="tipo" required>
+                        <option value="carros" {% if fornecedor.tipo == 'carros' %}selected{% endif %}>Carros</option>
+                        <option value="pecas" {% if fornecedor.tipo == 'pecas' %}selected{% endif %}>Peças</option>
+                        <option value="ambos" {% if fornecedor.tipo == 'ambos' %}selected{% endif %}>Ambos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Guardar</button>
+                <a href="{% url 'fornecedores' %}" class="btn btn-secondary">← Voltar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

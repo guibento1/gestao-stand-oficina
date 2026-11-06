@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Drives - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🚘 Test Drives</h1>
+    
+    <!-- Formulário de Agendar -->
+    <div class="card form-card">
+        <h2>Agendar Test Drive</h2>
+        <form method="POST" action="{% url 'test_drives' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cliente_id">Cliente *</label>
+                    <select id="cliente_id" name="cliente_id" required>
+                        <option value="">Selecione...</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="carro_id">Carro *</label>
+                    <select id="carro_id" name="carro_id" required>
+                        <option value="">Selecione...</option>
+                        {% for carro in carros %}
+                        <option value="{{ carro.id }}">{{ carro.info }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="data_teste">Data e Hora *</label>
+                    <input type="datetime-local" id="data_teste" name="data_teste" required>
+                </div>
+                <div class="form-group">
+                    <label for="duracao_minutos">Duração (minutos)</label>
+                    <select id="duracao_minutos" name="duracao_minutos">
+                        <option value="15">15 min</option>
+                        <option value="30" selected>30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">1 hora</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="funcionario_id">Funcionário Responsável</label>
+                    <select id="funcionario_id" name="funcionario_id">
+                        <option value="">Selecione...</option>
+                        {% for func in funcionarios %}
+                        <option value="{{ func.id }}">{{ func.nome }} ({{ func.cargo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">📅 Agendar Test Drive</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Test Drives -->
+    <div class="card">
+        <h2>Test Drives Agendados</h2>
+        {% if test_drives %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data/Hora</th>
+                        <th>Cliente</th>
+                        <th>Carro</th>
+                        <th>Duração</th>
+                        <th>Funcionário</th>
+                        <th>Feedback</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for td in test_drives %}
+                    <tr>
+                        <td>#{{ td.test_drive_id }}</td>
+                        <td>{{ td.data_teste|date:"d/m/Y" }}</td>
+                        <td>{{ td.cliente }}</td>
+                        <td>{{ td.marca }} {{ td.carro }}</td>
+                        <td>{{ td.duracao_minutos }} min</td>
+                        <td>{{ td.funcionario|default:'-' }}</td>
+                        <td>
+                            {% if td.feedback %}
+                            <span class="badge badge-success">✓</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not td.feedback %}
+                            <button type="button" class="btn btn-small btn-secondary" onclick="document.getElementById('feedback-form-{{ td.test_drive_id }}').style.display='block'">📝 Feedback</button>
+                            <div id="feedback-form-{{ td.test_drive_id }}" style="display:none; margin-top:10px;">
+                                <form method="POST" action="{% url 'registar_feedback_testdrive' td.test_drive_id %}">
+                                    {% csrf_token %}
+                                    <textarea name="feedback" rows="2" placeholder="Escreva o feedback..." required></textarea>
+                                    <button type="submit" class="btn btn-small btn-primary">Guardar</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <small>{{ td.feedback|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhum test drive agendado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

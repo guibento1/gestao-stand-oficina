@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Garantias - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🛡️ Gestão de Garantias</h1>
+    
+    <!-- Formulário de Adicionar -->
+    <div class="card form-card">
+        <h2>Associar Garantia a Venda</h2>
+        <form method="POST" action="{% url 'garantias' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="venda_id">Venda *</label>
+                    <select id="venda_id" name="venda_id" required>
+                        <option value="">Selecione uma venda...</option>
+                        {% for venda in vendas_sem_garantia %}
+                        <option value="{{ venda.venda_id }}">Venda #{{ venda.venda_id }} - {{ venda.cliente }} - {{ venda.carro }} ({{ venda.data }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="duracao_meses">Duração (meses) *</label>
+                    <select id="duracao_meses" name="duracao_meses" required>
+                        <option value="6">6 meses</option>
+                        <option value="12" selected>12 meses</option>
+                        <option value="24">24 meses</option>
+                        <option value="36">36 meses</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="detalhes">Detalhes da Garantia</label>
+                    <textarea id="detalhes" name="detalhes" rows="2" placeholder="Cobertura, exclusões, etc."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Associar Garantia</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Garantias -->
+    <div class="card">
+        <h2>Garantias Ativas</h2>
+        {% if garantias %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Venda</th>
+                        <th>Cliente</th>
+                        <th>Carro</th>
+                        <th>Duração</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for g in garantias %}
+                    <tr>
+                        <td>#{{ g.garantia_id }}</td>
+                        <td>#{{ g.venda_id }}</td>
+                        <td>{{ g.cliente }}</td>
+                        <td>{{ g.carro }}</td>
+                        <td>{{ g.duracao_meses }} meses</td>
+                        <td>{{ g.data_inicio }}</td>
+                        <td>{{ g.data_fim }}</td>
+                        <td>
+                            {% if g.data_fim >= today %}
+                            <span class="badge badge-success">Ativa</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Expirada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhuma garantia registada.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

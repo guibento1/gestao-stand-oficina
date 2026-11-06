@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Peças - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🔩 Gestão de Peças</h1>
+    
+    <!-- Tabs de navegação -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('lista')">📦 Todas as Peças</button>
+        <button class="tab {% if pecas_baixo %}tab-warning{% endif %}" onclick="showTab('stockbaixo')">⚠️ Stock Baixo ({{ pecas_baixo|length|default:0 }})</button>
+        {% if user.is_superuser %}
+        <button class="tab" onclick="showTab('adicionar')">➕ Adicionar</button>
+        {% endif %}
+    </div>
+    
+    <!-- Tab: Lista de Peças -->
+    <div id="lista" class="tab-content active">
+    <div class="card">
+        <h2>Lista de Peças</h2>
+        {% if pecas %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Código</th>
+                        <th>Preço</th>
+                        <th>Stock Atual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for peca in pecas %}
+                    <tr>
+                        <td>{{ peca.nome }}</td>
+                        <td>{{ peca.codigo_fabricante|default:'-' }}</td>
+                        <td>€{{ peca.preco }}</td>
+                        <td>{{ peca.stock_atual }}</td>
+                        <td>{{ peca.stock_minimo }}</td>
+                        <td>
+                            {% if peca.stock_atual < peca.stock_minimo %}
+                            <span class="badge badge-danger">Stock Baixo</span>
+                            {% elif peca.stock_atual == 0 %}
+                            <span class="badge badge-danger">Sem Stock</span>
+                            {% else %}
+                            <span class="badge badge-success">OK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhuma peça registada.</p>
+        {% endif %}
+    </div>
+    </div>
+    
+    <!-- Tab: Stock Baixo -->
+    <div id="stockbaixo" class="tab-content">
+    <div class="card">
+        <h2>⚠️ Peças com Stock Baixo</h2>
+        {% if pecas_baixo %}
+        <div class="alert alert-warning">
+            <strong>Atenção!</strong> {{ pecas_baixo|length }} peça(s) com stock abaixo do mínimo.
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Código Fabricante</th>
+                        <th>Preço</th>
+                        <th>Stock Atual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Faltam</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for peca in pecas_baixo %}
+                    <tr class="row-warning">
+                        <td>{{ peca.nome }}</td>
+                        <td>{{ peca.codigo_fabricante|default:'-' }}</td>
+                        <td>€{{ peca.preco }}</td>
+                        <td><span class="badge badge-danger">{{ peca.stock_atual }}</span></td>
+                        <td>{{ peca.stock_minimo }}</td>
+                        <td><span class="badge badge-warning">{{ peca.faltam }} unidades</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+            ✅ Todas as peças têm stock adequado!
+        </div>
+        {% endif %}
+    </div>
+    </div>
+    
+    <!-- Tab: Adicionar (apenas admin) -->
+    {% if user.is_superuser %}
+    <div id="adicionar" class="tab-content">
+    <div class="card form-card">
+        <h2>Adicionar Peça</h2>
+        <form method="POST" action="{% url 'pecas' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nome">Nome *</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="codigo_fabricante">Código Fabricante</label>
+                    <input type="text" id="codigo_fabricante" name="codigo_fabricante">
+                </div>
+                <div class="form-group">
+                    <label for="preco">Preço (€) *</label>
+                    <input type="number" id="preco" name="preco" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="stock_inicial">Stock Inicial</label>
+                    <input type="number" id="stock_inicial" name="stock_inicial" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="stock_minimo">Stock Mínimo</label>
+                    <input type="number" id="stock_minimo" name="stock_minimo" min="0" value="0">
+                </div>
+                <div class="form-group full-width">
+                    <label for="descricao">Descrição</label>
+                    <textarea id="descricao" name="descricao" rows="2"></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Adicionar Peça</button>
+        </form>
+    </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Ordem de Serviço #{{ ordem.ordem_servico_id }} - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>📋 Ordem de Serviço #{{ ordem.ordem_servico_id }}</h1>
+        {% if user_role == 'cliente' %}
+        <a href="{% url 'ordens_servico' %}#minhas_ordens" class="btn btn-secondary">← Voltar</a>
+        {% else %}
+        <a href="{% url 'ordens_servico' %}" class="btn btn-secondary">← Voltar</a>
+        {% endif %}
+    </div>
+
+    <!-- Todos os Detalhes em Um Único Card -->
+    <div class="card-large">
+        <h2>📋 Detalhes Completos da Ordem de Serviço</h2>
+
+        <!-- Informações Básicas -->
+        <div class="section-divider">
+            <h3>Informações Gerais</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Cliente:</strong> {{ ordem.c_nome }}
+                </div>
+                <div class="info-item">
+                    <strong>Veículo:</strong> {{ ordem.nome_veiculo }}
+                </div>
+                <div class="info-item">
+                    <strong>Tipo de Serviço:</strong> {{ ordem.tipo_servico }}
+                </div>
+                <div class="info-item">
+                    <strong>Mecânico:</strong> {{ ordem.mecanico_nome|default:'Não atribuído' }}
+                </div>
+                <div class="info-item">
+                    <strong>Baia:</strong> {{ ordem.numero_baia|default:'Não atribuída' }}
+                </div>
+                <div class="info-item">
+                    <strong>Criado por:</strong> {{ ordem.criado_por_nome|default:'Sistema' }}
+                </div>
+                <div class="info-item">
+                    <strong>Status:</strong>
+                    <span class="status status-{{ ordem.status|lower }}">
+                        {% if ordem.status == 'pendente' %}⏳ Pendente{% elif ordem.status == 'em_andamento' %}🔧 Em Andamento{% elif ordem.status == 'concluida' %}✅ Concluída{% else %}{{ ordem.status }}{% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <strong>Prioridade:</strong>
+                    {% if ordem.prioridade == 'baixa' %}🟢 Baixa{% elif ordem.prioridade == 'normal' %}🟡 Normal{% elif ordem.prioridade == 'alta' %}🟠 Alta{% elif ordem.prioridade == 'urgente' %}🔴 Urgente{% endif %}
+                </div>
+                <div class="info-item">
+                    <strong>Data de Entrada:</strong> {{ ordem.data_entrada|date:"d/m/Y" }}
+                </div>
+                {% if ordem.data_prevista_saida %}
+                <div class="info-item">
+                    <strong>Data Prevista de Saída:</strong> {{ ordem.data_prevista_saida|date:"d/m/Y" }}
+                </div>
+                {% endif %}
+                {% if ordem.data_saida %}
+                <div class="info-item">
+                    <strong>Data de Saída:</strong> {{ ordem.data_saida|date:"d/m/Y" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Descrições -->
+        <div class="section-divider">
+            <h3>Descrições</h3>
+            <div class="form-grid">
+                {% if ordem.descricao_problema %}
+                <div class="form-group">
+                    <label><strong>Problema Relatado:</strong></label>
+                    <p>{{ ordem.descricao_problema }}</p>
+                </div>
+                {% endif %}
+                {% if ordem.descricao_solucao %}
+                <div class="form-group">
+                    <label><strong>Solução Aplicada:</strong></label>
+                    <p>{{ ordem.descricao_solucao }}</p>
+                </div>
+                {% endif %}
+                {% if ordem.observacoes %}
+                <div class="form-group">
+                    <label><strong>Observações:</strong></label>
+                    <p>{{ ordem.observacoes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Valores -->
+        {% if ordem.valor_total or ordem.orcamento_valor %}
+        <div class="section-divider">
+            <h3>💰 Valores</h3>
+            <div class="info-grid">
+                {% if ordem.orcamento_id %}
+                <div class="info-item">
+                    <strong>ID Orçamento:</strong> #{{ ordem.orcamento_id }}
+                </div>
+                {% endif %}
+                {% if ordem.orcamento_valor %}
+                <div class="info-item">
+                    <strong>Valor Orçado:</strong> €{{ ordem.orcamento_valor }}
+                </div>
+                {% endif %}
+                {% if ordem.valor_mao_obra %}
+                <div class="info-item">
+                    <strong>Mão de Obra:</strong> €{{ ordem.valor_mao_obra }}
+                </div>
+                {% endif %}
+                {% if ordem.valor_pecas %}
+                <div class="info-item">
+                    <strong>Peças:</strong> €{{ ordem.valor_pecas }}
+                </div>
+                {% endif %}
+                {% if ordem.valor_total %}
+                <div class="info-item">
+                    <strong>Valor Total:</strong> €{{ ordem.valor_total }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Peças Utilizadas -->
+        {% if pecas_utilizadas %}
+        <div class="section-divider">
+            <h3>🔧 Peças Utilizadas</h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Peça</th>
+                            <th>Quantidade</th>
+                            <th>Preço Unitário</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for peca in pecas_utilizadas %}
+                        <tr>
+                            <td>{{ peca.nome }}</td>
+                            <td>{{ peca.quantidade }}</td>
+                            <td>€{{ peca.preco_unitario }}</td>
+                            <td>€{{ peca.preco_total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Diagnósticos (MongoDB) -->
+        {% if diagnosticos %}
+        <div class="section-divider">
+            <h3>🔍 Diagnósticos</h3>
+            {% for diagnostico in diagnosticos %}
+            <div class="diagnostico-item">
+                <h4>Diagnóstico #{{ diagnostico.diagnostico_id }}</h4>
+                <p><strong>Descrição:</strong> {{ diagnostico.descricao }}</p>
+                {% if diagnostico.recomendacoes %}
+                <p><strong>Recomendações:</strong> {{ diagnostico.recomendacoes }}</p>
+                {% endif %}
+                {% if diagnostico.timestamp %}
+                <p><strong>Data:</strong> {{ diagnostico.timestamp|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Histórico de Manutenção (MongoDB) -->
+        {% if historico_manutencao %}
+        <div class="section-divider">
+            <h3>📝 Histórico de Manutenção</h3>
+            {% for registro in historico_manutencao %}
+            <div class="manutencao-item">
+                <h4>{{ registro.descricao }}</h4>
+                {% if registro.pecas_utilizadas %}
+                <p><strong>Peças Utilizadas:</strong> {{ registro.pecas_utilizadas }}</p>
+                {% endif %}
+                {% if registro.timestamp %}
+                <p><strong>Data:</strong> {{ registro.timestamp|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Avaliação da Ordem de Serviço -->
+        {% if eh_cliente_dono and ordem.status == 'concluida' %}
+        <div class="section-divider">
+            <h3>⭐ Avaliar Ordem de Serviço</h3>
+            <p>Avalie o serviço realizado nesta ordem de serviço:</p>
+
+            <form method="post" action="{% url 'avaliar_ordem_servico' ordem.ordem_servico_id %}" class="form">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="classificacao">Classificação (1-5):</label>
+                        <select id="classificacao" name="classificacao" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (5) - Excelente</option>
+                            <option value="4">⭐⭐⭐⭐ (4) - Muito Bom</option>
+                            <option value="3">⭐⭐⭐ (3) - Bom</option>
+                            <option value="2">⭐⭐ (2) - Regular</option>
+                            <option value="1">⭐ (1) - Ruim</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comentario">Comentário (opcional):</label>
+                    <textarea id="comentario" name="comentario" rows="4" placeholder="Conte-nos sua experiência com este serviço..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fotos">Fotos (opcional):</label>
+                    <input type="file" id="fotos" name="fotos" multiple accept="image/*">
+                    <small>Você pode selecionar múltiplas fotos</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Enviar Avaliação</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Ações -->
+        {% if pode_editar %}
+        <div class="section-divider">
+            <h3>⚙️ Ações</h3>
+            <div class="actions-grid">
+                {% if ordem.status == 'pendente' %}
+                <a href="{% url 'concluir_os' ordem.ordem_servico_id %}" class="btn btn-success" onclick="return confirm('Tem certeza que deseja concluir esta ordem de serviço?')">✅ Concluir OS</a>
+                <a href="{% url 'cancelar_os' ordem.ordem_servico_id %}" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja cancelar esta ordem de serviço?')">❌ Cancelar OS</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-divider {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.section-divider:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-divider h3 {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.status-pendente { background: #fff3cd; color: #856404; }
+.status-em_andamento { background: #cce5ff; color: #004085; }
+.status-concluida { background: #d4edda; color: #155724; }
+.status-cancelada { background: #f8d7da; color: #721c24; }
+
+.diagnostico-item, .manutencao-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.diagnostico-item h4, .manutencao-item h4 {
+    margin-top: 0;
+    color: #28a745;
+    font-size: 1rem;
+}
+
+.actions-grid {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.data-table th, .data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group textarea, .form-group select, .form-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.form-actions {
+    margin-top: 1rem;
+}
+</style>
+{% endblock %}

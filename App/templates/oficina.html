@@ -1,0 +1,903 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if pode_ver_tudo %}Oficina{% else %}Avaliações de Serviço{% endif %} - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>{% if pode_ver_tudo %}🔧 Oficina & Serviços{% else %}⭐ Avaliações de Serviço{% endif %}</h1>
+    {% if pode_ver_tudo %}
+    <p class="subtitle">Gestão completa de manutenções, diagnósticos, eventos e avaliações (MongoDB)</p>
+    {% else %}
+    <p class="subtitle">Partilhe a sua opinião sobre os nossos serviços</p>
+    {% endif %}
+
+    <!-- ========== MANUTENÇÕES ========== -->
+    {% if pode_ver_tudo %}
+    <!-- Registar Manutenção -->
+    <div class="section">
+        <div class="section-header">
+            <h2>🛠️ Registar Manutenção</h2>
+            <button onclick="toggleForm('manutencaoForm', 'manutencaoBtn')" class="btn btn-sm" id="manutencaoBtn">➕ Abrir Formulário</button>
+        </div>
+        <div id="manutencaoForm" class="form-container" style="display: none;">
+            <form method="post" action="{% url 'adicionar_manutencao' %}" class="form">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="carro_id">Carro:</label>
+                        <select id="carro_id" name="carro_id" required>
+                            <option value="">-- Selecione um carro --</option>
+                            {% for carro in carros %}
+                            <option value="{{ carro.carro_id }}">{{ carro }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ordem_servico_id">Ordem de Serviço:</label>
+                        <select id="ordem_servico_id" name="ordem_servico_id">
+                            <option value="">-- Nenhuma --</option>
+                            {% for ordem in form_ordens_list %}
+                            <option value="{{ ordem.ordem_servico_id }}">{{ ordem }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descricao">Descrição da Manutenção:</label>
+                    <textarea id="descricao" name="descricao" rows="3" placeholder="Descreva a manutenção realizada..." required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="mecanico_id">Mecânico:</label>
+                        <select id="mecanico_id" name="mecanico_id">
+                            <option value="">-- Selecione um mecânico --</option>
+                            {% for mecanico in mecanicos %}
+                            <option value="{{ mecanico.mecanico_id }}">{{ mecanico.nome }} - {{ mecanico.especialidade }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mecanico_nome">Ou Nome do Técnico (se externo):</label>
+                        <input type="text" id="mecanico_nome" name="mecanico_nome" placeholder="Nome do técnico">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="custo_total">Custo Total (€):</label>
+                        <input type="number" id="custo_total" name="custo_total" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tempo_execucao">Tempo de Execução (minutos):</label>
+                        <input type="number" id="tempo_execucao" name="tempo_execucao" min="1" value="60" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quilometragem">Quilometragem Atual:</label>
+                        <input type="number" id="quilometragem" name="quilometragem" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="proxima_revisao">Próxima Revisão (km):</label>
+                        <input type="number" id="proxima_revisao" name="proxima_revisao" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="diagnostico_descricao">Diagnóstico/Observações:</label>
+                    <textarea id="diagnostico_descricao" name="diagnostico_descricao" rows="2" placeholder="Observações sobre o diagnóstico..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="observacoes">Observações Adicionais:</label>
+                    <textarea id="observacoes" name="observacoes" rows="2" placeholder="Observações adicionais..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" onclick="toggleForm('manutencaoForm', 'manutencaoBtn')" class="btn btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Registar Manutenção</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Histórico de Manutenções -->
+    <div class="section">
+        <h2>📋 Manutenções Registadas</h2>
+        {% for m in manutencoes %}
+        <div class="card-detalhe">
+            <h3>🛠️ {{ m.descricao }}</h3>
+            <p><strong>Carro:</strong> {{ m.carro_obj }}</p>
+                {% if m.ordem_servico_id %}
+            <p><strong>Ordem de Serviço:</strong> {% if m.ordem_servico_nome %}{{ m.ordem_servico_nome }}{% else %}#{{ m.ordem_servico_id }}{% endif %}</p>
+            {% endif %}
+            {% if m.mecanico %}
+            <p><strong>Mecânico:</strong> {{ m.mecanico.nome }}{% if m.mecanico.especialidade %} ({{ m.mecanico.especialidade }}){% endif %}</p>
+            {% endif %}
+            {% if m.diagnostico and m.diagnostico.descricao %}
+            <p><strong>Diagnóstico:</strong> {{ m.diagnostico.descricao }}</p>
+            {% endif %}
+            {% if m.pecas_utilizadas %}
+            <p><strong>Peças Utilizadas:</strong> {{ m.pecas_utilizadas|length }} peça(s)</p>
+            {% endif %}
+            <p><strong>Custo Total:</strong> {{ m.custo_total }}€</p>
+            <p><strong>Tempo de Execução:</strong> {{ m.tempo_execucao_minutos }} min</p>
+            {% if m.proxima_revisao_km %}
+            <p><strong>Próxima Revisão:</strong> {{ m.proxima_revisao_km }} km</p>
+            {% endif %}
+            <p><strong>Data:</strong> {{ m.created_at|date:"d/m/Y H:i" }}</p>
+            {% if pode_ver_tudo and m.doc_id %}
+            <form method="post" action="{% url 'eliminar_manutencao' m.doc_id %}" style="display:inline; margin-top:8px;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-cancel" onclick="return confirm('Eliminar este registo de manutenção?');">🗑️ Eliminar</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% if not manutencoes %}
+        <p class="text-muted">Nenhuma manutenção registada.</p>
+        {% endif %}
+    </div>
+
+    <!-- ========== DIAGNÓSTICOS ========== -->
+    <!-- Registar Diagnóstico -->
+    <div class="section">
+        <div class="section-header">
+            <h2>🔍 Registar Diagnóstico</h2>
+            <button onclick="toggleForm('diagnosticoForm', 'diagnosticoBtn')" class="btn btn-sm" id="diagnosticoBtn">➕ Abrir Formulário</button>
+        </div>
+        <div id="diagnosticoForm" class="form-container" style="display: none;">
+            <form method="post" action="{% url 'adicionar_diagnostico' %}" class="form">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="carro_id_diag">Carro:</label>
+                        <select id="carro_id_diag" name="carro_id" required>
+                            <option value="">-- Selecione um carro --</option>
+                            {% for carro in carros %}
+                            <option value="{{ carro.carro_id }}">{{ carro }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ordem_servico_id_diag">Ordem de Serviço:</label>
+                        <select id="ordem_servico_id_diag" name="ordem_servico_id">
+                            <option value="">-- Nenhuma --</option>
+                            {% for ordem in form_ordens_list %}
+                            <option value="{{ ordem.ordem_servico_id }}">{{ ordem }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dados do Scanner OBD-II -->
+                <h4 style="margin-top: 20px; color: #2c3e50;">🔌 Dados do Scanner OBD-II</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vin">VIN do Veículo:</label>
+                        <input type="text" id="vin" name="vin" placeholder="WBADT43452G123456">
+                    </div>
+                    <div class="form-group">
+                        <label for="rpm">RPM do Motor:</label>
+                        <input type="number" id="rpm" name="rpm" min="0" placeholder="rotações por minuto">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="temperatura_motor">Temperatura do Motor (°C):</label>
+                        <input type="number" id="temperatura_motor" name="temperatura_motor" step="0.1" placeholder="temperatura">
+                    </div>
+                    <div class="form-group">
+                        <label for="voltagem_bateria">Voltagem da Bateria (V):</label>
+                        <input type="number" id="voltagem_bateria" name="voltagem_bateria" step="0.1" value="12.6" placeholder="voltagem">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="duracao_diagnostico">Duração do Diagnóstico (min):</label>
+                        <input type="number" id="duracao_diagnostico" name="duracao_diagnostico" min="1" value="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="comentarios_tecnico">Comentários Técnicos:</label>
+                        <textarea id="comentarios_tecnico" name="comentarios_tecnico" rows="2" placeholder="Comentários técnicos..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Mecânico -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="mecanico_id_diag">Mecânico:</label>
+                        <select id="mecanico_id_diag" name="mecanico_id">
+                            <option value="">-- Selecione um mecânico --</option>
+                            {% for mecanico in mecanicos %}
+                            <option value="{{ mecanico.mecanico_id }}">{{ mecanico.nome }} - {{ mecanico.especialidade }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mecanico_nome_diag">Ou Nome do Técnico (se externo):</label>
+                        <input type="text" id="mecanico_nome_diag" name="mecanico_nome" placeholder="Nome do técnico">
+                    </div>
+                </div>
+
+                <!-- Códigos DTC -->
+                <h4 style="margin-top: 20px; color: #2c3e50;">⚠️ Códigos de Erro DTC</h4>
+                <div id="dtc-container">
+                    <div class="dtc-item" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Código DTC:</label>
+                                <input type="text" name="dtc_codigo[]" placeholder="Ex: P0420">
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>Descrição:</label>
+                                <input type="text" name="dtc_descricao[]" placeholder="Descrição do código">
+                            </div>
+                            <div class="form-group" style="flex: 0.5;">
+                                <label>Severidade:</label>
+                                <select name="dtc_severidade[]">
+                                    <option value="baixa">🟢 Baixa</option>
+                                    <option value="media">🟡 Média</option>
+                                    <option value="alta">🔴 Alta</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="addDTC()" class="btn btn-sm" style="margin-bottom: 15px;">➕ Adicionar Código DTC</button>
+
+                <!-- Recomendações -->
+                <h4 style="margin-top: 20px; color: #2c3e50;">💡 Recomendações de Reparação</h4>
+                <div id="rec-container">
+                    <div class="rec-item" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 2;">
+                                <label>Descrição:</label>
+                                <input type="text" name="recomendacao_descricao[]" placeholder="Descrição da recomendação" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Prioridade:</label>
+                                <select name="prioridade[]">
+                                    <option value="baixa">Baixa</option>
+                                    <option value="media" selected>Média</option>
+                                    <option value="alta">Alta</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 0.5;">
+                                <label>&nbsp;</label>
+                                <button type="button" onclick="removeItem(this)" class="btn btn-sm btn-cancel">❌</button>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Custo Estimado (€):</label>
+                                <input type="number" name="custo_estimado[]" step="0.01" min="0">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Prazo:</label>
+                                <select name="prazo[]">
+                                    <option value="urgente">Urgente</option>
+                                    <option value="1_semana" selected>1 Semana</option>
+                                    <option value="2_semanas">2 Semanas</option>
+                                    <option value="1_mes">1 Mês</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>Peças Necessárias:</label>
+                                <input type="text" name="pecas_necessarias[]" placeholder="Separe por vírgulas">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="addRecomendacao()" class="btn btn-sm" style="margin-bottom: 15px;">➕ Adicionar Recomendação</button>
+
+                <div class="form-actions">
+                    <button type="button" onclick="toggleForm('diagnosticoForm', 'diagnosticoBtn')" class="btn btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Registar Diagnóstico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Histórico de Diagnósticos -->
+    <div class="section">
+        <h2>🔧 Diagnósticos Registados</h2>
+        {% for d in diagnosticos %}
+        <div class="card-detalhe">
+            <h3>🔍 Diagnóstico - {{ d.carro_obj }}</h3>
+            {% if d.ordem_servico_id %}
+            <p><strong>Ordem de Serviço:</strong> {% if d.ordem_servico_nome %}{{ d.ordem_servico_nome }}{% else %}#{{ d.ordem_servico_id }}{% endif %}</p>
+            {% endif %}
+            {% if d.mecanico %}
+            <p><strong>Mecânico:</strong> {{ d.mecanico.nome }}{% if d.mecanico.especialidade %} ({{ d.mecanico.especialidade }}){% endif %}</p>
+            {% endif %}
+            {% if d.vin %}
+            <p><strong>VIN:</strong> {{ d.vin }}</p>
+            {% endif %}
+            {% if d.codigos_dtc %}
+            <p><strong>Códigos de Erro:</strong> {{ d.codigos_dtc|length }}</p>
+            {% for codigo in d.codigos_dtc %}
+            <small style="display: block; margin-left: 20px;">
+                {{ codigo.codigo }}: {{ codigo.descricao }}
+                {% if codigo.severidade == 'alta' %}🔴{% elif codigo.severidade == 'media' %}🟡{% else %}🟢{% endif %}
+            </small>
+            {% endfor %}
+            {% endif %}
+            {% if d.recomendacoes %}
+            <p><strong>Recomendações:</strong> {{ d.recomendacoes|length }}</p>
+            {% for rec in d.recomendacoes %}
+            <small style="display: block; margin-left: 20px;">
+                {{ rec.descricao }} - €{{ rec.custo_estimado }}
+            </small>
+            {% endfor %}
+            {% endif %}
+            {% if d.dados_obd %}
+            <p><strong>OBD-II:</strong> RPM: {{ d.dados_obd.rpm }} | Temp: {{ d.dados_obd.temperatura_motor }}°C | Bateria: {{ d.dados_obd.voltagem_bateria }}V</p>
+            {% endif %}
+            <p><strong>Duração:</strong> {{ d.duracao_minutos }} min | <strong>Data:</strong> {{ d.created_at|date:"d/m/Y H:i" }}</p>
+            {% if d.comentarios_tecnico %}
+            <p><strong>Comentários Técnicos:</strong> {{ d.comentarios_tecnico }}</p>
+            {% endif %}
+            {% if pode_ver_tudo and d.doc_id %}
+            <form method="post" action="{% url 'eliminar_diagnostico' d.doc_id %}" style="display:inline; margin-top:8px;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-cancel" onclick="return confirm('Eliminar este diagnóstico?');">🗑️ Eliminar</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% if not diagnosticos %}
+        <p class="text-muted">Nenhum diagnóstico registado.</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+    <!-- ========== AVALIAÇÕES ========== -->
+    <div class="section">
+        <div class="section-header">
+            <h2>⭐ Avaliações de Serviço</h2>
+            <button onclick="toggleForm('avaliacaoForm', 'avaliacaoBtn')" class="btn btn-sm" id="avaliacaoBtn">➕ Adicionar Avaliação</button>
+        </div>
+
+        <div id="avaliacaoForm" class="form-container" style="display: none;">
+            <form method="post" action="{% url 'adicionar_avaliacao' %}" class="form">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo_avaliacao">Tipo de Avaliação:</label>
+                        <select id="tipo_avaliacao" name="tipo_avaliacao" required>
+                            <option value="servico">Serviço</option>
+                            <option value="produto">Produto</option>
+                            <option value="geral">Geral</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="classificacao">Classificação (1-5):</label>
+                        <select id="classificacao" name="classificacao" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (5) - Excelente</option>
+                            <option value="4">⭐⭐⭐⭐ (4) - Muito Bom</option>
+                            <option value="3">⭐⭐⭐ (3) - Bom</option>
+                            <option value="2">⭐⭐ (2) - Regular</option>
+                            <option value="1">⭐ (1) - Ruim</option>
+                        </select>
+                    </div>
+                </div>
+
+                {% if eh_cliente %}
+                <div class="form-group">
+                    <label>Nome do Cliente:</label>
+                    <input type="text" name="cliente_nome" value="{{ request.user.get_full_name|default:request.user.email }}" readonly>
+                </div>
+                {% elif pode_ver_tudo %}
+                <div class="form-group">
+                    <label for="cliente_id">Cliente:</label>
+                    <select id="cliente_id" name="cliente_id">
+                        <option value="">-- Selecione um cliente --</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="ordem_servico_id">Ordem de Serviço:</label>
+                    <select id="ordem_servico_id" name="ordem_servico_id">
+                        <option value="">-- Nenhuma --</option>
+                        {% for ordem in form_ordens_list %}
+                        <option value="{{ ordem.ordem_servico_id }}">{{ ordem }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="comentario">Comentário:</label>
+                    <textarea id="comentario" name="comentario" rows="3" placeholder="Comentário da avaliação..." required></textarea>
+                </div>
+
+                <!-- Detalhes adicionais integrados automaticamente a partir da Ordem de Serviço (se selecionada) -->
+
+                <div class="form-actions">
+                    <button type="button" onclick="toggleForm('avaliacaoForm', 'avaliacaoBtn')" class="btn btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Adicionar Avaliação</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Avaliações -->
+        <div class="cards-grid">
+            {% for a in avaliacoes_detalhes %}
+            <div class="card-detalhe">
+                <h3>⭐ Avaliação {{ a.tipo_avaliacao|title }} - {{ a.classificacao }}/5</h3>
+                {% if a.ordem_servico_id %}
+                <p><strong>Ordem de Serviço:</strong> {% if a.ordem_servico_nome %}{{ a.ordem_servico_nome }}{% else %}#{{ a.ordem_servico_id }}{% endif %}</p>
+                {% endif %}
+                {% if a.cliente_nome %}
+                <p><strong>Cliente:</strong> {{ a.cliente_nome }}</p>
+                {% endif %}
+                {% if a.comentario %}
+                <p><strong>Comentário:</strong> {{ a.comentario }}</p>
+                {% endif %}
+                {% if a.fotos %}
+                <p><strong>Fotos:</strong> {{ a.fotos|length }} foto(s)</p>
+                {% endif %}
+                {% if a.resposta_stand %}
+                <p><strong>Resposta do Stand:</strong> {{ a.resposta_stand.texto }}</p>
+                {% endif %}
+                <p><strong>Data:</strong> {{ a.created_at|date:"d/m/Y H:i" }}</p>
+                {% if pode_ver_tudo and a.doc_id %}
+                <form method="post" action="{% url 'eliminar_avaliacao_detalhe' a.doc_id %}" style="display:inline; margin-top:8px;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-cancel" onclick="return confirm('Eliminar detalhe da avaliação?');">🗑️ Eliminar</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if not avaliacoes_detalhes %}
+            <p class="text-muted" style="text-align: center; width: 100%;">Nenhuma avaliação registada.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========== EVENTOS ========== -->
+    {% if pode_ver_tudo %}
+    <!-- Adicionar Evento de Serviço -->
+    <div class="section">
+        <div class="section-header">
+            <h2>🔧 Evento de Serviço</h2>
+            <button onclick="toggleForm('eventoForm', 'eventoBtn')" class="btn btn-sm" id="eventoBtn">➕ Novo Evento</button>
+        </div>
+        <div id="eventoForm" class="form-container" style="display: none;">
+            <form method="post" action="{% url 'adicionar_evento' %}">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Evento:</label>
+                        <select name="tipo_evento" required>
+                            <option value="manutencao_iniciada">Manutenção Iniciada</option>
+                            <option value="manutencao_concluida">Manutenção Concluída</option>
+                            <option value="diagnostico_realizado">Diagnóstico Realizado</option>
+                            <option value="peca_substituida">Peça Substituída</option>
+                            <option value="avaliacao_realizada">Avaliação Realizada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Carro:</label>
+                        <select name="carro_id">
+                            <option value="">-- Selecione um carro --</option>
+                            {% for carro in evento_carros %}
+                            <option value="{{ carro.carro_id }}">{{ carro }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ordem de Serviço:</label>
+                        <select name="ordem_servico_id">
+                            <option value="">-- Nenhuma --</option>
+                            {% for ordem in form_ordens_list %}
+                            <option value="{{ ordem.ordem_servico_id }}">{{ ordem }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Descrição:</label>
+                        <textarea name="descricao" rows="3" placeholder="Descrição detalhada do evento" required></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status do Evento:</label>
+                        <select name="status">
+                            <option value="pendente">Pendente</option>
+                            <option value="processado">Processado</option>
+                        </select>
+                    </div>
+                </div>
+                <h4 style="margin-top:12px;">Destinos</h4>
+                <div id="destinos-container">
+                    <div class="destino-item" style="border:1px solid #ddd; padding:8px; margin-bottom:8px; border-radius:6px;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sistema:</label>
+                                <input type="text" name="destino_sistema[]" placeholder="ERP, BI, ...">
+                            </div>
+                            <div class="form-group">
+                                <label>URL:</label>
+                                <input type="url" name="destino_url[]" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label>Status do Destino:</label>
+                                <select name="destino_status[]">
+                                    <option value="pendente">Pendente</option>
+                                    <option value="sucesso">Sucesso</option>
+                                    <option value="falha">Falha</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="addDestino()" class="btn btn-sm" style="margin-bottom:12px;">➕ Adicionar Destino</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        {% if pode_ver_tudo %}
+                        <label for="cliente_id">Cliente:</label>
+                        <select id="cliente_id" name="cliente_id">
+                            <option value="">-- Selecione um cliente --</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" name="cliente_nome" value="{{ evento_cliente_nome|default:'' }}" {% if evento_cliente_nome %}readonly{% endif %}>
+                        {% if evento_cliente_id %}
+                        <input type="hidden" name="cliente_id" value="{{ evento_cliente_id }}">
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">📝 Registrar Evento</button>
+                    <button type="button" onclick="toggleForm('eventoForm', 'eventoBtn')" class="btn btn-cancel">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Eventos de Integração -->
+    <div class="section">
+        <h2>🔄 Eventos de Integração</h2>
+        {% for e in eventos_integracao %}
+        <div class="card-detalhe">
+            <h3>🔄 Evento de Integração - {{ e.tipo }}</h3>
+            <p><strong>Status:</strong>
+                {% if e.status == 'pendente' %}
+                    <span class="status status-pendente">⏳ Pendente</span>
+                {% elif e.status == 'processando' %}
+                    <span class="status status-processando">🔄 Processando</span>
+                {% elif e.status == 'processado' or e.status == 'sucesso' %}
+                    <span class="status status-sucesso">✅ Processado</span>
+                {% elif e.status == 'falha' %}
+                    <span class="status status-falha">❌ Falha</span>
+                {% else %}
+                    <span class="status">{{ e.status }}</span>
+                {% endif %}
+            </p>
+            {% if e.retry_count %}
+            <p><strong>Tentativas:</strong> {{ e.retry_count }}/{{ e.max_retries }}</p>
+            {% endif %}
+            {% if e.destinos %}
+            <p><strong>Destinos:</strong> {{ e.destinos|length }}</p>
+            <div style="margin-top: 10px;">
+                {% for destino in e.destinos %}
+                <div style="display: flex; gap: 12px; align-items:center; margin-bottom:8px;">
+                    <div style="flex:1;">
+                        <strong>{{ destino.sistema|default:'-' }}</strong> — <a href="{{ destino.url }}" target="_blank">{{ destino.url }}</a>
+                        <div style="font-size:0.9rem; color:var(--muted)">
+                            {% if destino.http_status %}HTTP: {{ destino.http_status }}{% endif %}
+                            {% if destino.tempo_resposta_ms %} • {{ destino.tempo_resposta_ms }}ms{% endif %}
+                        </div>
+                    </div>
+                    <div style="flex:0 0 220px; text-align:right;">
+                        <span style="display:inline-block; margin-right:8px;">
+                            {% if destino.status == 'sucesso' %}✅{% elif destino.status == 'falha' %}❌{% else %}⏳{% endif %}
+                        </span>
+                        {% if pode_ver_tudo %}
+                        <form method="post" action="{% url 'atualizar_status_destino' e.evento_id forloop.counter0 %}" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="destino_status">
+                                <option value="pendente" {% if destino.status == 'pendente' %}selected{% endif %}>Pendente</option>
+                                <option value="sucesso" {% if destino.status == 'sucesso' %}selected{% endif %}>Sucesso</option>
+                                <option value="falha" {% if destino.status == 'falha' %}selected{% endif %}>Falha</option>
+                            </select>
+                            <input type="text" name="http_status" placeholder="HTTP" style="width:60px; margin-left:6px;" value="{% if destino.http_status %}{{ destino.http_status }}{% endif %}">
+                            <button type="submit" class="btn btn-sm btn-primary" style="margin-left:6px;">OK</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p><strong>Criado:</strong> {{ e.created_at|date:"d/m/Y H:i" }}</p>
+            {% if e.updated_at %}
+            <p><strong>Atualizado:</strong> {{ e.updated_at|date:"d/m/Y H:i" }}</p>
+            {% endif %}
+                        {% if pode_ver_tudo and e.evento_id %}
+                        <form method="post" action="{% url 'eliminar_evento' e.evento_id %}" style="display:inline; margin-top:8px;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-cancel" onclick="return confirm('Eliminar este evento de integração?');">🗑️ Eliminar</button>
+                        </form>
+                        <form method="post" action="{% url 'atualizar_status_evento' e.evento_id %}" style="display:inline; margin-left:8px; margin-top:8px;">
+                            {% csrf_token %}
+                            <select name="status">
+                                <option value="pendente" {% if e.status == 'pendente' %}selected{% endif %}>Pendente</option>
+                                <option value="processado" {% if e.status == 'processado' or e.status == 'sucesso' %}selected{% endif %}>Processado</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary" style="margin-left:6px;">Atualizar</button>
+                        </form>
+                        {% endif %}
+        </div>
+        {% endfor %}
+        {% if not eventos_integracao %}
+        <p class="text-muted">Nenhum evento de integração registado.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+/* Cards de detalhes */
+.card-detalhe {
+    background: var(--surface);
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    border: 1.5px solid var(--border);
+    padding: 32px 32px 24px 32px;
+    margin: 24px auto 32px auto;
+    max-width: 700px;
+    width: 100%;
+    font-size: 1.08rem;
+    color: var(--text-dark);
+    transition: box-shadow 0.2s;
+}
+.card-detalhe:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.card-detalhe h3 {
+    font-size: 1.3rem;
+    margin-bottom: 18px;
+    color: var(--primary);
+    border-bottom: 1.5px solid var(--primary);
+    padding-bottom: 10px;
+}
+.card-detalhe p {
+    margin-bottom: 10px;
+}
+
+/* Formulários */
+.form-container {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-top: 16px;
+}
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
+.form-group input, .form-group select, .form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+}
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+/* Status */
+.status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.status-pendente { background: #fff3cd; color: #856404; }
+.status-processando { background: #cce5ff; color: #004085; }
+.status-sucesso { background: #d4edda; color: #155724; }
+.status-falha { background: #f8d7da; color: #721c24; }
+
+/* Botões */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: #28a745; color: white; }
+.btn-cancel { background: #6c757d; color: white; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* Grid de cards */
+.cards-grid {
+    display: grid;
+    gap: 24px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .card-detalhe {
+        padding: 20px;
+        margin: 16px 0;
+    }
+}
+</style>
+
+<script>
+function addDTC() {
+    const container = document.getElementById('dtc-container');
+    const dtcItem = document.createElement('div');
+    dtcItem.className = 'dtc-item';
+    dtcItem.style.cssText = 'border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;';
+    dtcItem.innerHTML = `
+        <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+                <label>Código DTC:</label>
+                <input type="text" name="dtc_codigo[]" placeholder="Ex: P0420">
+            </div>
+            <div class="form-group" style="flex: 2;">
+                <label>Descrição:</label>
+                <input type="text" name="dtc_descricao[]" placeholder="Descrição do código">
+            </div>
+            <div class="form-group" style="flex: 0.5;">
+                <label>Severidade:</label>
+                <select name="dtc_severidade[]">
+                    <option value="baixa">🟢 Baixa</option>
+                    <option value="media">🟡 Média</option>
+                    <option value="alta">🔴 Alta</option>
+                </select>
+            </div>
+        </div>
+    `;
+    container.appendChild(dtcItem);
+}
+
+function addRecomendacao() {
+    const container = document.getElementById('rec-container');
+    const recItem = document.createElement('div');
+    recItem.className = 'rec-item';
+    recItem.style.cssText = 'border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;';
+    recItem.innerHTML = `
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label>Descrição:</label>
+                <input type="text" name="recomendacao_descricao[]" placeholder="Descrição da recomendação" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Prioridade:</label>
+                <select name="prioridade[]">
+                    <option value="baixa">Baixa</option>
+                    <option value="media" selected>Média</option>
+                    <option value="alta">Alta</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 0.5;">
+                <label>&nbsp;</label>
+                <button type="button" onclick="removeItem(this)" class="btn btn-sm btn-cancel">❌</button>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+                <label>Custo Estimado (€):</label>
+                <input type="number" name="custo_estimado[]" step="0.01" min="0">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Prazo:</label>
+                <select name="prazo[]">
+                    <option value="urgente">Urgente</option>
+                    <option value="1_semana" selected>1 Semana</option>
+                    <option value="2_semanas">2 Semanas</option>
+                    <option value="1_mes">1 Mês</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 2;">
+                <label>Peças Necessárias:</label>
+                <input type="text" name="pecas_necessarias[]" placeholder="Separe por vírgulas">
+            </div>
+        </div>
+    `;
+    container.appendChild(recItem);
+}
+
+function removeItem(button) {
+    button.closest('.dtc-item, .rec-item').remove();
+}
+
+function toggleForm(formId, btnId) {
+    const form = document.getElementById(formId);
+    const btn = document.getElementById(btnId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.textContent = '➖ Fechar';
+    } else {
+        form.style.display = 'none';
+        btn.textContent = '➕ Abrir Formulário';
+    }
+}
+
+function addDestino() {
+    const container = document.getElementById('destinos-container');
+    const item = document.createElement('div');
+    item.className = 'destino-item';
+    item.style.cssText = 'border:1px solid #ddd; padding:8px; margin-bottom:8px; border-radius:6px;';
+    item.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label>Sistema:</label>
+                <input type="text" name="destino_sistema[]" placeholder="ERP, BI, ...">
+            </div>
+            <div class="form-group">
+                <label>URL:</label>
+                <input type="url" name="destino_url[]" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Status do Destino:</label>
+                <select name="destino_status[]">
+                    <option value="pendente">Pendente</option>
+                    <option value="sucesso">Sucesso</option>
+                    <option value="falha">Falha</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:0.3; align-self:flex-end;">
+                <button type="button" onclick="this.closest('.destino-item').remove()" class="btn btn-sm btn-cancel">❌</button>
+            </div>
+        </div>
+    `;
+    container.appendChild(item);
+}
+</script>
+
+{% endblock %}

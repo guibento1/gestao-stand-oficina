@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Funcionários - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>👔 Gestão de Funcionários</h1>
+    
+    <!-- Formulário de Adicionar -->
+    <div class="card form-card">
+        <h2>Adicionar Funcionário</h2>
+        <form method="POST" action="{% url 'funcionarios' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="f_nome">Nome *</label>
+                    <input type="text" id="f_nome" name="f_nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_email">Email *</label>
+                    <input type="email" id="f_email" name="f_email" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_telefone">Telefone *</label>
+                    <input type="text" id="f_telefone" name="f_telefone" required>
+                </div>
+                <div class="form-group">
+                    <label for="cargo">Cargo *</label>
+                    <select id="cargo" name="cargo" required>
+                        <option value="">Selecione...</option>
+                        <option value="vendedor">Vendedor</option>
+                        <option value="atendente">Atendente</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="administrativo">Administrativo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="stand_id">Stand *</label>
+                    <select id="stand_id" name="stand_id" required>
+                        <option value="">Selecione...</option>
+                        {% for stand in stands %}
+                        <option value="{{ stand.id }}">{{ stand.nome }} - {{ stand.localizacao }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="salario">Salário</label>
+                    <input type="number" id="salario" name="salario" step="0.01" min="0">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Adicionar Funcionário</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Funcionários -->
+    <div class="card">
+        <h2>Lista de Funcionários</h2>
+        {% if funcionarios %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Cargo</th>
+                        <th>Stand</th>
+                        <th>Admissão</th>
+                        <th>Salário</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for func in funcionarios %}
+                    <tr>
+                        <td>{{ func.f_nome }}</td>
+                        <td>{{ func.f_email }}</td>
+                        <td>{{ func.f_telefone }}</td>
+                        <td><span class="badge">{{ func.cargo }}</span></td>
+                        <td>{{ func.stand_nome }}</td>
+                        <td>{{ func.data_admissao }}</td>
+                        <td>{% if func.salario %}€{{ func.salario }}{% else %}-{% endif %}</td>
+                        <td class="actions">
+                            <a href="{% url 'editar_funcionario' func.funcionario_id %}" class="btn btn-small btn-secondary">✏️ Editar</a>
+                            <form method="POST" action="{% url 'eliminar_funcionario' func.funcionario_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Tem certeza que deseja eliminar este funcionário?')">🗑️ Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhum funcionário registado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

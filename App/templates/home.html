@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Início - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="home">
+    <div class="hero">
+        <h1>Bem-vindo ao Stand da Auto Care!</h1>
+        {% if user.is_authenticated %}
+        <p style="font-size: 18px; margin-top: 10px;">
+            👋 Olá, <strong>{{ user.username }}</strong>
+            {% if user.is_superuser %}(Admin){% elif user.is_staff %}(Funcionário){% else %}(Cliente){% endif %}
+        </p>
+        {% else %}
+        <p>Explore os nossos carros disponíveis e encontre o seu próximo veículo!</p>
+        {% endif %}
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.carros }}</div>
+            <div class="stat-label">Carros</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.clientes }}</div>
+            <div class="stat-label">Clientes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.vendas }}</div>
+            <div class="stat-label">Vendas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.avaliacoes }}</div>
+            <div class="stat-label">Avaliações</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

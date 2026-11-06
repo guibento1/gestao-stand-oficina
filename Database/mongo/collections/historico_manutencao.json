@@ -1,0 +1,56 @@
+{
+  "carro_id": 123,
+  "ordem_servico_id": 456,
+  "descricao": "Troca de óleo e filtros - Manutenção preventiva dos 45.000 km",
+  "data": { "$date": "2025-11-05T09:00:00Z" },
+  "mecanico": {
+    "mecanico_id": 12,
+    "nome": "João Silva",
+    "especialidade": "Manutenção preventiva"
+  },
+  "pecas_utilizadas": [
+    {
+      "peca_id": 101,
+      "nome": "Óleo Sintético 5W30",
+      "quantidade": 5,
+      "codigo": "OL5W30-001",
+      "preco_unitario": 15.50
+    },
+    {
+      "peca_id": 102,
+      "nome": "Filtro de Óleo",
+      "quantidade": 1,
+      "codigo": "FO-BMW-2024",
+      "preco_unitario": 22.00
+    },
+    {
+      "peca_id": 103,
+      "nome": "Filtro de Ar",
+      "quantidade": 1,
+      "codigo": "FA-BMW-2024",
+      "preco_unitario": 18.00
+    }
+  ],
+  "diagnostico": {
+    "descricao": "Veículo em bom estado geral. Óleo antigo apresentava cor escura mas sem contaminação. Recomendado verificar pastilhas de freio nos próximos 10.000 km.",
+    "quilometragem": 45000,
+    "nivel_urgencia": "baixo",
+    "observacoes": "Cliente solicitou lavagem de motor. Executado sem custo adicional."
+  },
+  "anexos": [
+    {
+      "tipo": "foto",
+      "url": "https://cdn.stand.com/manutencao/foto_oleo123.jpg",
+      "descricao": "Estado do óleo antigo - cor escura"
+    },
+    {
+      "tipo": "pdf",
+      "url": "https://cdn.stand.com/manutencao/relatorio_obd123.pdf",
+      "descricao": "Relatório completo do scanner OBD-II"
+    }
+  ],
+  "custo_total": 250.50,
+  "tempo_execucao_minutos": 90,
+  "proxima_revisao_km": 55000,
+  "created_at": { "$date": "2025-11-05T09:00:00Z" }
+}

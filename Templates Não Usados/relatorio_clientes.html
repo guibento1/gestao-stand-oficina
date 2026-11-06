@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório de Clientes - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>👥 Relatório de Clientes</h1>
+    
+    <div class="card">
+        <div class="report-header">
+            <h2>Base de Clientes</h2>
+            <div class="report-actions">
+                <button onclick="window.print()" class="btn btn-secondary">🖨️ Imprimir</button>
+                <a href="{% url 'relatorios' %}" class="btn btn-outline">← Voltar</a>
+            </div>
+        </div>
+        
+        {% if dados %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>NIF</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Morada</th>
+                        <th>Data Registo</th>
+                        <th>Compras</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in dados %}
+                    <tr>
+                        <td>{{ cliente.id }}</td>
+                        <td><strong>{{ cliente.nome }}</strong></td>
+                        <td>{{ cliente.nif }}</td>
+                        <td><a href="mailto:{{ cliente.email }}">{{ cliente.email }}</a></td>
+                        <td>{{ cliente.telefone }}</td>
+                        <td>{{ cliente.morada|truncatechars:30 }}</td>
+                        <td>{{ cliente.data_registo }}</td>
+                        <td>
+                            <span class="badge {% if cliente.total_compras > 0 %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ cliente.total_compras|default:0 }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Estatísticas de Clientes -->
+        <div class="stats-section">
+            <h3>📊 Estatísticas de Clientes</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">{{ dados|length }}</span>
+                    <span class="stat-text">Total Clientes</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ clientes_com_compras|default:0 }}</span>
+                    <span class="stat-text">Com Compras</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ novos_mes|default:0 }}</span>
+                    <span class="stat-text">Novos este Mês</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Nenhum cliente registado no sistema.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.stats-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-radius: 10px;
+    color: white;
+}
+
+.stats-section h3 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.stat-text {
+    display: block;
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+@media print {
+    .report-actions { display: none; }
+}
+</style>
+{% endblock %}

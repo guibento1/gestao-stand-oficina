@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+
+{% block title %}Ordens de Serviço - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>📋 Ordens de Serviço</h1>
+    
+    <!-- Tabs de navegação -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('criar')">➕ Nova OS</button>
+        {% if user_role in 'admin,gerente,mecanico,funcionario' %}
+        <button class="tab" onclick="showTab('andamento')">🔧 Em Andamento ({{ ordens|length }})</button>
+        <button class="tab {% if ordens_atrasadas %}tab-warning{% endif %}" onclick="showTab('atrasadas')">⚠️ Atrasadas ({{ ordens_atrasadas|length|default:0 }})</button>
+        <button class="tab" onclick="showTab('concluidas')">✅ Concluídas ({{ ordens_concluidas|length|default:0 }})</button>
+        {% elif user_role == 'cliente' %}
+        <button class="tab" onclick="showTab('minhas_ordens')">📋 Minhas Ordens</button>
+        {% endif %}
+    </div>
+    
+    <!-- Tab: Criar OS -->
+    <div id="criar" class="tab-content active">
+    <div class="card-large form-card">
+        <h2>Criar Ordem de Serviço</h2>
+        <form method="POST" action="{% url 'ordens_servico' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cliente_id">Cliente *</label>
+                    <select id="cliente_id" name="cliente_id" required>
+                        <option value="">Selecione...</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.cliente_id }}">{{ cliente.c_nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nome_veiculo">Nome do Veículo *</label>
+                    <input type="text" id="nome_veiculo" name="nome_veiculo" required placeholder="Ex: Porsche 918 Spyder">
+                </div>
+                <div class="form-group">
+                    <label for="tipo_servico_id">Tipo de Serviço *</label>
+                    <select id="tipo_servico_id" name="tipo_servico_id" required>
+                        <option value="">Selecione...</option>
+                        {% for tipo in tipos_servico %}
+                        <option value="{{ tipo.tipo_servico_id }}">{{ tipo.nome }} (€{{ tipo.preco_base }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quilometragem">Quilometragem *</label>
+                    <input type="number" id="quilometragem" name="quilometragem" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="valor_mao_obra">Valor Mão de Obra *</label>
+                    <input type="number" id="valor_mao_obra" name="valor_mao_obra" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="mecanico_id">Mecânico</label>
+                    <select id="mecanico_id" name="mecanico_id">
+                        <option value="">Selecione...</option>
+                        {% for mec in mecanicos %}
+                        <option value="{{ mec.mecanico_id }}">{{ mec.nome }} ({{ mec.especialidade }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="baia_id">Baia</label>
+                    <select id="baia_id" name="baia_id">
+                        <option value="">Selecione...</option>
+                        {% for baia in baias %}
+                        <option value="{{ baia.baia_id }}">{{ baia.stand_nome }} - {{ baia.numero_baia }} ({{ baia.tipo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prioridade">Prioridade</label>
+                    <select id="prioridade" name="prioridade">
+                        <option value="baixa">Baixa</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="alta">Alta</option>
+                        <option value="urgente">Urgente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="data_prevista">Data Prevista Conclusão</label>
+                    <input type="datetime-local" id="data_prevista" name="data_prevista">
+                </div>
+                <div class="form-group full-width">
+                    <label for="diagnostico">Diagnóstico</label>
+                    <textarea id="diagnostico" name="diagnostico" rows="2"></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label for="observacoes">Observações</label>
+                    <textarea id="observacoes" name="observacoes" rows="2"></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Criar OS</button>
+        </form>
+    </div>
+    </div>
+    
+    <!-- Tab: Em Andamento -->
+    {% if user_role in 'admin,gerente,mecanico,funcionario' %}
+    <div id="andamento" class="tab-content">
+    <div class="card-large">
+        <h2>Ordens de Serviço em Andamento</h2>
+        {% if ordens %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Tipo</th>
+                        <th>Mecânico</th>
+                        <th>Status</th>
+                        <th>Prioridade</th>
+                        <th>Entrada</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for os in ordens %}
+                    <tr>
+                        <td>#{{ os.ordem_servico_id }}</td>
+                        <td>{{ os.cliente }}</td>
+                        <td>{{ os.nome_veiculo }}</td>
+                        <td>{{ os.tipo_servico }}</td>
+                        <td>{{ os.mecanico|default:'-' }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if os.status == 'aguardando' %}badge-warning
+                                {% elif os.status == 'em_andamento' %}badge-info
+                                {% elif os.status == 'pausado' %}badge-secondary
+                                {% endif %}">{{ os.status }}</span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if os.prioridade == 'urgente' %}badge-danger
+                                {% elif os.prioridade == 'alta' %}badge-warning
+                                {% else %}badge-secondary
+                                {% endif %}">{{ os.prioridade }}</span>
+                        </td>
+                        <td>{{ os.data_entrada|date:"d/m/Y" }}</td>
+                        <td>€{{ os.valor_total }}</td>
+                        <td class="actions">
+                            <form method="POST" action="{% url 'concluir_os' os.ordem_servico_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-success" onclick="return confirm('Concluir esta OS?')">✅ Concluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhuma ordem de serviço em andamento.</p>
+        {% endif %}
+    </div>
+    </div>
+    {% endif %}
+    
+    <!-- Tab: Atrasadas -->
+    {% if user_role in 'admin,gerente,mecanico,funcionario' %}
+    <div id="atrasadas" class="tab-content">
+    <div class="card-large">
+        <h2>⚠️ Ordens de Serviço Atrasadas</h2>
+        {% if ordens_atrasadas %}
+        <div class="alert alert-warning">
+            <strong>Atenção!</strong> Existem {{ ordens_atrasadas|length }} ordens de serviço atrasadas.
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Tipo</th>
+                        <th>Mecânico</th>
+                        <th>Status</th>
+                        <th>Prioridade</th>
+                        <th>Entrada</th>
+                        <th>Prevista</th>
+                        <th>Dias Atraso</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for os in ordens_atrasadas %}
+                    <tr class="row-danger">
+                        <td>#{{ os.ordem_servico_id }}</td>
+                        <td>{{ os.cliente }}</td>
+                        <td>{{ os.nome_veiculo }}</td>
+                        <td>{{ os.tipo_servico }}</td>
+                        <td>{{ os.mecanico|default:'-' }}</td>
+                        <td><span class="badge badge-warning">{{ os.status }}</span></td>
+                        <td>
+                            <span class="badge 
+                                {% if os.prioridade == 'urgente' %}badge-danger
+                                {% elif os.prioridade == 'alta' %}badge-warning
+                                {% endif %}">{{ os.prioridade }}</span>
+                        </td>
+                        <td>{{ os.data_entrada|date:"d/m/Y" }}</td>
+                        <td>{{ os.data_prevista|date:"d/m/Y" }}</td>
+                        <td><span class="badge badge-danger">{{ os.dias_atraso }} dias</span></td>
+                        <td>
+                            <form method="POST" action="{% url 'concluir_os' os.ordem_servico_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-success">✅ Concluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+            ✅ Não existem ordens de serviço atrasadas!
+        </div>
+        {% endif %}
+    </div>
+    </div>
+    {% endif %}
+    
+    <!-- Tab: Concluídas -->
+    {% if user_role in 'admin,gerente,mecanico,funcionario' %}
+    <div id="concluidas" class="tab-content">
+    <div class="card-large">
+        <h2>✅ Ordens de Serviço Concluídas</h2>
+        {% if ordens_concluidas %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Tipo</th>
+                        <th>Mecânico</th>
+                        <th>Entrada</th>
+                        <th>Saída</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for os in ordens_concluidas %}
+                    <tr>
+                        <td>#{{ os.ordem_servico_id }}</td>
+                        <td>{{ os.cliente }}</td>
+                        <td>{{ os.nome_veiculo }}</td>
+                        <td>{{ os.tipo_servico }}</td>
+                        <td>{{ os.mecanico|default:'-' }}</td>
+                        <td>{{ os.data_entrada|date:"d/m/Y" }}</td>
+                        <td>{{ os.data_saida|date:"d/m/Y"|default:'-' }}</td>
+                        <td>€{{ os.valor_total }}</td>
+                        <td class="actions">
+                            {% if user_role in 'admin,gerente,mecanico' %}
+                            <form method="POST" action="{% url 'eliminar_ordem_servico' os.ordem_servico_id %}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja eliminar esta ordem de serviço?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-danger">🗑️ Eliminar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            ℹ️ Nenhuma ordem de serviço concluída ainda.
+        </div>
+        {% endif %}
+    </div>
+    </div>
+    {% endif %}
+
+    <!-- Tab: Minhas Ordens (Cliente) -->
+    {% if user_role == 'cliente' %}
+    <div id="minhas_ordens" class="tab-content">
+    <div class="card-large">
+        <h2>📋 Minhas Ordens de Serviço</h2>
+        
+        <!-- Em Andamento -->
+        {% if ordens %}
+        <h3>🔧 Em Andamento</h3>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Veículo</th>
+                        <th>Tipo</th>
+                        <th>Mecânico</th>
+                        <th>Entrada</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for os in ordens %}
+                    <tr>
+                        <td>#{{ os.ordem_servico_id }}</td>
+                        <td>{{ os.nome_veiculo }}</td>
+                        <td>{{ os.tipo_servico }}</td>
+                        <td>{{ os.mecanico|default:'-' }}</td>
+                        <td>{{ os.data_entrada|date:"d/m/Y" }}</td>
+                        <td class="actions">
+                            {% if user_role not in 'admin,gerente,mecanico' %}
+                            <a href="{% url 'detalhes_ordem_servico' os.ordem_servico_id %}" class="btn btn-small btn-info">📋 Detalhes</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Concluídas -->
+        {% if ordens_concluidas %}
+        <h3>✅ Concluídas</h3>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Veículo</th>
+                        <th>Tipo</th>
+                        <th>Mecânico</th>
+                        <th>Entrada</th>
+                        <th>Saída</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for os in ordens_concluidas %}
+                    <tr>
+                        <td>#{{ os.ordem_servico_id }}</td>
+                        <td>{{ os.nome_veiculo }}</td>
+                        <td>{{ os.tipo_servico }}</td>
+                        <td>{{ os.mecanico|default:'-' }}</td>
+                        <td>{{ os.data_entrada|date:"d/m/Y" }}</td>
+                        <td>{{ os.data_saida|date:"d/m/Y"|default:'-' }}</td>
+                        <td>€{{ os.valor_total }}</td>
+                        <td class="actions">
+                            <a href="{% url 'detalhes_ordem_servico' os.ordem_servico_id %}" class="btn btn-small btn-info">📋 Detalhes</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if not ordens and not ordens_concluidas %}
+        <div class="alert alert-info">
+            ℹ️ Você ainda não possui ordens de serviço.
+        </div>
+        {% endif %}
+    </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

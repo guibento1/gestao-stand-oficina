@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block title %}Detalhes Carro - Auto Care Stand{% endblock %}
+
+{% block content %}
+<style>
+/* Estilos para os modais */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #0f172a;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.modal-body {
+    padding: 1rem 1.5rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Estilos específicos para a galeria */
+.galeria-item {
+    transition: transform 0.2s ease;
+}
+
+.galeria-item:hover {
+    transform: scale(1.05);
+}
+
+.galeria-descricao {
+    word-wrap: break-word;
+}
+</style>
+
+<!-- Meta tags para evitar cache -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<div class="page">
+    <h1>🚗 Detalhes do Carro</h1>
+    <p class="subtitle">{{ carro.marca }} {{ carro.modelo }} ({{ carro.ano }})</p>
+
+    <div class="carro-detalhes" style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+        <div class="carro-imagens" style="flex: 1; min-width: 300px;">
+            <!-- Imagem de Capa Grande -->
+            {% if carro.imagem_capa %}
+                <div class="imagem-capa-principal" style="margin-bottom: 1rem;">
+                    <img src="{{ carro.imagem_capa }}" alt="Imagem principal do carro" 
+                         style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 12px; cursor: pointer;" 
+                         onclick="openImageModal('{{ carro.imagem_capa }}', '{{ carro.marca }} {{ carro.modelo }} - Imagem Principal')">
+                </div>
+            {% else %}
+                <div class="carro-icon" style="font-size: 80px; margin: 2rem auto;">🚗</div>
+            {% endif %}
+            
+            <!-- Miniaturas e link para ver todas -->
+            {% if carro.imagens %}
+                <div class="imagens-miniatura" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    {% for img in carro.imagens %}
+                        {% if forloop.first %}
+                            <div class="miniatura-item" style="position: relative;">
+                                <img src="{{ img.sas_url }}" alt="Miniatura" 
+                                     style="width: 80px; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid #007bff;" 
+                                     onclick="openImageModal('{{ img.sas_url }}', '{{ carro.marca }} {{ carro.modelo }}')">
+                                {% if img.is_capa %}
+                                    <span class="badge-capa" style="position: absolute; top: -5px; right: -5px; background: #007bff; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;">Capa</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if carro.imagens|length > 1 %}
+                        <a href="#" onclick="openGalleryModal()" class="btn btn-outline-primary btn-sm" style="margin-left: 1rem;">
+                            📸 Ver todas as imagens ({{ carro.imagens|length }})
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-muted" style="text-align: center;">Sem imagens disponíveis</p>
+            {% endif %}
+        </div>
+
+        <div class="carro-info" style="flex: 1; min-width: 300px;">
+            <div class="app-card">
+                <h3 style="margin-bottom: 1rem;">Informações Principais</h3>
+                <div class="card-grid cols-2">
+                    <div><strong>Marca:</strong> {{ carro.marca }}</div>
+                    <div><strong>Modelo:</strong> {{ carro.modelo }}</div>
+                    <div><strong>Ano:</strong> {{ carro.ano }}</div>
+                    <div><strong>Preço:</strong> {{ carro.preço|floatformat:2 }} €</div>
+                    <div><strong>Estado:</strong> {{ carro.estado|capfirst }}</div>
+                    <div><strong>Stand:</strong> {{ carro.stand }}</div>
+                    <div><strong>Quilometragem:</strong> {{ carro.quilometragem }} km</div>
+                    <div><strong>Cor:</strong> {{ carro.cor|default:"—" }}</div>
+                    <div><strong>Chassi:</strong> {{ carro.chassi|default:"—" }}</div>
+                    <div><strong>Placa:</strong> {{ carro.placa|default:"—" }}</div>
+                    <div><strong>Status Disponibilidade:</strong> {{ carro.status_disponibilidade|capfirst }}</div>
+                    <div><strong>Data Aquisição:</strong> {{ carro.data_aquisicao|date:'d/m/Y'|default:"—" }}</div>
+                    <div><strong>Combustível:</strong> {{ carro.combustivel|capfirst|default:"—" }}</div>
+                    <div><strong>Potência:</strong> {{ carro.potencia|default:"—" }} CV</div>
+                    <div><strong>Cilindrada:</strong> {{ carro.cilindrada|default:"—" }} cc</div>
+                    <div><strong>Portas:</strong> {{ carro.portas|default:"—" }}</div>
+                    <div><strong>Lugares:</strong> {{ carro.lugares|default:"—" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if pode_editar %}
+    <div class="app-card" style="margin-top: 2rem;">
+        <h3>Adicionar Nova Imagem</h3>
+        <form method="post" action="{% url 'upload_imagem_carro' carro.carro_id %}" enctype="multipart/form-data" class="form-row">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="imagem">Imagem:</label>
+                <input type="file" id="imagem" name="imagem" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="descricao">Descrição:</label>
+                <input type="text" id="descricao" name="descricao" placeholder="Descrição da imagem">
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="is_capa" name="is_capa"> Definir como imagem de capa</label>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">📤 Adicionar Imagem</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="page-actions" style="margin-top: 2rem;">
+        <a href="{% url 'carros' %}" class="btn btn-secondary">← Voltar à lista de carros</a>
+    </div>
+</div>
+
+<!-- Modal para Imagem Ampliada -->
+<div id="imageModal" class="modal hidden">
+    <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+        <div class="modal-header">
+            <h3 id="imageModalTitle">Imagem do Carro</h3>
+            <button onclick="closeModal('imageModal')" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align: center; padding: 1rem;">
+            <img id="imageModalImg" src="" alt="Imagem ampliada" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Galeria Completa -->
+<div id="galleryModal" class="modal hidden">
+    <div class="modal-content" style="max-width: 95vw; max-height: 95vh;">
+        <div class="modal-header">
+            <h3>Galeria de Imagens - {{ carro.marca }} {{ carro.modelo }}</h3>
+            <button onclick="closeModal('galleryModal')" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+            <div class="galeria-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; max-height: 70vh; overflow-y: auto;">
+                {% for img in carro.imagens %}
+                    <div class="galeria-item" style="position: relative; cursor: pointer;" onclick="openImageModal('{{ img.sas_url }}', '{{ carro.marca }} {{ carro.modelo }}{% if img.descricao %} - {{ img.descricao }}{% endif %}')">
+                        <img src="{{ img.sas_url }}" alt="Imagem da galeria" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+                        {% if img.is_capa %}
+                            <span class="badge-capa" style="position: absolute; top: 5px; right: 5px; background: #007bff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">Capa</span>
+                        {% endif %}
+                        {% if img.descricao %}
+                            <div class="galeria-descricao" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 4px; font-size: 12px; border-radius: 0 0 8px 8px;">
+                                {{ img.descricao }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funções para modais
+    window.openImageModal = function(imageSrc, title) {
+        console.log('Abrindo modal para:', imageSrc);
+        document.getElementById('imageModalImg').src = imageSrc;
+        document.getElementById('imageModalTitle').textContent = title;
+        document.getElementById('imageModal').classList.remove('hidden');
+    };
+
+    window.openGalleryModal = function() {
+        console.log('Abrindo galeria');
+        document.getElementById('galleryModal').classList.remove('hidden');
+    };
+
+    window.closeModal = function(modalId) {
+        console.log('Fechando modal:', modalId);
+        document.getElementById(modalId).classList.add('hidden');
+    };
+
+    // Fechar modal ao clicar fora
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+
+    // Fechar modal com tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal:not(.hidden)').forEach(modal => {
+                modal.classList.add('hidden');
+            });
+        }
+    });
+
+    console.log('JavaScript carregado - imagem de capa deve estar visível');
+});
+</script>
+{% endblock %}

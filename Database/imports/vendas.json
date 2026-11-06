@@ -1,0 +1,17 @@
+{
+  "tipo": "vendas",
+  "total": 1,
+  "data_exportacao": "2026-01-20 19:25:57.539714",
+  "dados": [
+    {
+      "venda_id": 20,
+      "cliente_id": 20,
+      "carro_id": 20,
+      "funcionario_id": null,
+      "data": "2026-01-19",
+      "preco_final": "120000.00",
+      "forma_pagamento": "transferencia",
+      "observacoes": null
+    }
+  ]
+}

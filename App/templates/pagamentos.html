@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Pagamentos - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>💳 Pagamentos</h1>
+    
+    <!-- Formulário de Registar -->
+    <div class="card form-card">
+        <h2>Registar Pagamento</h2>
+        <form method="POST" action="{% url 'pagamentos' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="venda_id">Venda *</label>
+                    <select id="venda_id" name="venda_id" required>
+                        <option value="">Selecione...</option>
+                        {% for venda in vendas %}
+                        <option value="{{ venda.venda_id }}">#{{ venda.venda_id }} - {{ venda.cliente }} - {{ venda.carro }} (€{{ venda.preço_final }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="valor_pago">Valor Pago (€) *</label>
+                    <input type="number" id="valor_pago" name="valor_pago" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="metodo_pagamento">Método *</label>
+                    <select id="metodo_pagamento" name="metodo_pagamento" required>
+                        <option value="">Selecione...</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao_debito">Cartão Débito</option>
+                        <option value="cartao_credito">Cartão Crédito</option>
+                        <option value="transferencia">Transferência</option>
+                        <option value="mbway">MB Way</option>
+                        <option value="financiamento">Financiamento</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="numero_parcela">Nº Parcela</label>
+                    <input type="number" id="numero_parcela" name="numero_parcela" min="1">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">💰 Registar Pagamento</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Pagamentos -->
+    <div class="card">
+        <h2>Histórico de Pagamentos</h2>
+        {% if pagamentos %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Venda</th>
+                        <th>Cliente</th>
+                        <th>Carro</th>
+                        <th>Data</th>
+                        <th>Valor</th>
+                        <th>Método</th>
+                        <th>Parcela</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pag in pagamentos %}
+                    <tr>
+                        <td>#{{ pag.pagamento_id }}</td>
+                        <td>#{{ pag.venda_id }}</td>
+                        <td>{{ pag.cliente }}</td>
+                        <td>{{ pag.carro }}</td>
+                        <td>{{ pag.data_pagamento }}</td>
+                        <td>€{{ pag.valor_pago }}</td>
+                        <td><span class="badge">{{ pag.metodo_pagamento }}</span></td>
+                        <td>{{ pag.numero_parcela|default:'-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhum pagamento registado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

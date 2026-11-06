@@ -1,0 +1,41 @@
+{
+  "evento_id": "evt_2025111310450001",
+  "tipo": "venda.criada",
+  "payload": {
+    "venda_id": 789,
+    "cliente_id": 123,
+    "cliente_nome": "Maria Santos",
+    "carro_id": 456,
+    "carro_modelo": "BMW X5 2023",
+    "preco_final": 43500.00,
+    "funcionario_id": 567,
+    "stand_id": 1,
+    "timestamp": "2025-11-13T10:45:00Z"
+  },
+  "status": "processado",
+  "retry_count": 0,
+  "max_retries": 3,
+  "proxima_tentativa": null,
+  "destinos": [
+    {
+      "sistema": "ERP",
+      "url": "https://erp.stand.com/api/vendas",
+      "status": "sucesso",
+      "http_status": 201,
+      "response_body": { "erp_venda_id": "ERP-789-2025" },
+      "processado_em": { "$date": "2025-11-13T10:45:05Z" },
+      "tempo_resposta_ms": 234
+    },
+    {
+      "sistema": "BI",
+      "url": "https://bi.stand.com/api/eventos",
+      "status": "sucesso",
+      "http_status": 200,
+      "response_body": { "bi_evento_id": "BI-20251113-001" },
+      "processado_em": { "$date": "2025-11-13T10:45:08Z" },
+      "tempo_resposta_ms": 156
+    }
+  ],
+  "created_at": { "$date": "2025-11-13T10:45:00Z" },
+  "updated_at": { "$date": "2025-11-13T10:45:08Z" }
+}

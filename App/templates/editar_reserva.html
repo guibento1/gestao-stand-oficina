@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Reserva - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>✏️ Editar Reserva</h1>
+    <p class="subtitle">Reserva #{{ reserva.reserva_id }}</p>
+
+    <div class="add-form-section" style="max-width: 600px;">
+        <div class="info-box" style="margin-bottom: 20px;">
+            <p><strong>Cliente:</strong> {{ reserva.cliente_nome }}</p>
+            <p><strong>Carro:</strong> {{ reserva.carro_modelo }} ({{ reserva.carro_ano }})</p>
+            <p><strong>Data:</strong> {{ reserva.data_reserva }}</p>
+            <p><strong>Estado atual:</strong> {{ reserva.estado_reserva|capfirst }}</p>
+        </div>
+
+        <form method="post" class="form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="estado">Novo Estado:</label>
+                <select id="estado" name="estado" required>
+                    <option value="pendente" {% if reserva.estado_reserva == 'pendente' %}selected{% endif %}>📋 Pendente</option>
+                    <option value="confirmada" {% if reserva.estado_reserva == 'confirmada' %}selected{% endif %}>✅ Confirmada</option>
+                    <option value="cancelada" {% if reserva.estado_reserva == 'cancelada' %}selected{% endif %}>❌ Cancelada</option>
+                    <option value="concluida" {% if reserva.estado_reserva == 'concluida' %}selected{% endif %}>🎉 Concluída</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'reservas' %}" class="btn btn-cancel">Cancelar</a>
+                <button type="submit" class="btn btn-success">💾 Guardar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

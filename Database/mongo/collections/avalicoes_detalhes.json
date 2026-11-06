@@ -1,0 +1,21 @@
+{
+  "avaliacao_id": 1,
+  "comentario": "Excelente atendimento! Carro em perfeito estado. O funcionário foi muito prestável e explicou tudo detalhadamente. Recomendo!",
+  "fotos": [
+    "https://cdn.stand.com/avaliacoes/foto1_carro123.jpg",
+    "https://cdn.stand.com/avaliacoes/foto2_carro123.jpg"
+  ],
+  "resposta_stand": {
+    "texto": "Muito obrigado pelo feedback positivo! Ficamos felizes em poder ajudar na escolha do seu veículo.",
+    "data": { "$date": "2025-11-10T14:30:00Z" },
+    "respondido_por": "funcionario_45"
+  },
+  "metadata": {
+    "sentimento": "positivo",
+    "idioma": "pt",
+    "palavras_chave": ["excelente", "perfeito", "atendimento", "prestável"],
+    "score_ml": 0.95
+  },
+  "created_at": { "$date": "2025-11-08T10:00:00Z" },
+  "updated_at": { "$date": "2025-11-10T14:30:00Z" }
+}

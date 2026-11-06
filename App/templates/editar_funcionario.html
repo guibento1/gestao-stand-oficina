@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Funcionário - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>✏️ Editar Funcionário</h1>
+    
+    <div class="card form-card">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="f_nome">Nome *</label>
+                    <input type="text" id="f_nome" name="f_nome" value="{{ funcionario.f_nome }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_email">Email *</label>
+                    <input type="email" id="f_email" name="f_email" value="{{ funcionario.f_email }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_telefone">Telefone *</label>
+                    <input type="text" id="f_telefone" name="f_telefone" value="{{ funcionario.f_telefone }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="cargo">Cargo *</label>
+                    <select id="cargo" name="cargo" required>
+                        <option value="vendedor" {% if funcionario.cargo == 'vendedor' %}selected{% endif %}>Vendedor</option>
+                        <option value="atendente" {% if funcionario.cargo == 'atendente' %}selected{% endif %}>Atendente</option>
+                        <option value="financeiro" {% if funcionario.cargo == 'financeiro' %}selected{% endif %}>Financeiro</option>
+                        <option value="administrativo" {% if funcionario.cargo == 'administrativo' %}selected{% endif %}>Administrativo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="stand_id">Stand *</label>
+                    <select id="stand_id" name="stand_id" required>
+                        {% for stand in stands %}
+                        <option value="{{ stand.id }}" {% if stand.id == funcionario.stand_id %}selected{% endif %}>{{ stand.nome }} - {{ stand.localizacao }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="salario">Salário</label>
+                    <input type="number" id="salario" name="salario" step="0.01" min="0" value="{{ funcionario.salario }}">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Guardar Alterações</button>
+                <a href="{% url 'funcionarios' %}" class="btn btn-secondary">← Voltar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

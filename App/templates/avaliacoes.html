@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliações - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>⭐ Avaliações de Carros</h1>
+
+    {% if user.is_authenticated %}
+    <div class="add-form-section">
+        <h2>
+            <span>➕ Adicionar Avaliação</span>
+            <button onclick="toggleForm()" class="btn btn-sm" id="toggleBtn">➕ Abrir Formulário</button>
+        </h2>
+
+        <div id="formContainer" class="collapsible-content">
+            <form method="post" class="form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="adicionar">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cliente_id">Cliente:</label>
+                        {% if cliente_logado %}
+                        <!-- Cliente logado - mostrar nome e usar ID automaticamente -->
+                        <input type="text" value="{{ cliente_logado.nome }}" disabled class="form-control">
+                        <input type="hidden" name="cliente_id" value="{{ cliente_logado.id }}">
+                        {% else %}
+                        <!-- Staff pode escolher cliente -->
+                        <select id="cliente_id" name="cliente_id" required>
+                            <option value="">-- Selecione um cliente --</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipo_avaliacao">Tipo:</label>
+                        <select id="tipo_avaliacao" name="tipo_avaliacao" required>
+                            <option value="venda">Avaliação de Venda</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="carro_id">Carro:</label>
+                        <select id="carro_id" name="carro_id" required>
+                            <option value="">-- Selecione um carro --</option>
+                            {% for carro in carros %}
+                            <option value="{{ carro.id }}">{{ carro.info }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="classificacao">Classificação (1-5):</label>
+                        <select id="classificacao" name="classificacao" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                            <option value="4">⭐⭐⭐⭐ (4)</option>
+                            <option value="3">⭐⭐⭐ (3)</option>
+                            <option value="2">⭐⭐ (2)</option>
+                            <option value="1">⭐ (1)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comentario">Comentário:</label>
+                    <textarea id="comentario" name="comentario" rows="3" placeholder="Escreva a sua avaliação..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" onclick="toggleForm()" class="btn btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Enviar Avaliação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de avaliações -->
+    <div class="cards-grid">
+        {% for avaliacao in avaliacoes %}
+        <div class="card">
+            <h3>{% if avaliacao.carro_info %}{{ avaliacao.carro_info }}{% elif avaliacao.servico_info %}{{ avaliacao.servico_info }}{% else %}Serviço #{{ avaliacao.ordem_servico_id }}{% endif %}</h3>
+            <p><strong>Cliente:</strong> {{ avaliacao.cliente_nome }}</p>
+            <p><strong>Tipo:</strong> {{ avaliacao.tipo_avaliacao|capfirst }}</p>
+            <p class="stars">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= avaliacao.classificacao %}⭐{% endif %}
+                {% endfor %}
+            </p>
+            {% if avaliacao.comentario %}
+            <p>{{ avaliacao.comentario }}</p>
+            {% endif %}
+            <p class="date">{{ avaliacao.data_avaliacao }}</p>
+            
+            {% if pode_eliminar_todas or cliente_logado.id == avaliacao.cliente_id %}
+            <div class="card-actions">
+                <form method="post" action="{% url 'eliminar_avaliacao' avaliacao.avaliacao_id %}" style="display: inline;" onsubmit="return confirm('Tem a certeza que deseja eliminar esta avaliação?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="text-muted" style="text-align: center; width: 100%;">Nenhuma avaliação disponível.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function toggleForm() {
+    const form = document.getElementById('formContainer');
+    const btn = document.getElementById('toggleBtn');
+    if (form.classList.contains('show')) {
+        form.classList.remove('show');
+        btn.textContent = '➕ Abrir Formulário';
+    } else {
+        form.classList.add('show');
+        btn.textContent = '➖ Fechar';
+    }
+}
+</script>
+{% endblock %}

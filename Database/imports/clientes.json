@@ -1,0 +1,16 @@
+{
+  "tipo": "clientes",
+  "total": 1,
+  "data_exportacao": "2026-01-20 19:26:00.230255",
+  "dados": [
+    {
+      "cliente_id": 20,
+      "c_nome": "Tiago ",
+      "c_email": "teste@email.com",
+      "c_telefone": null,
+      "nif": null,
+      "data_cadastro": "2026-01-19",
+      "data_nascimento": null
+    }
+  ]
+}

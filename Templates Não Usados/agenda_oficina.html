@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}Agenda da Oficina - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>📅 Agenda da Oficina</h1>
+    
+    <!-- Navegação de Semanas -->
+    <div class="card">
+        <div class="week-navigation">
+            <a href="?semana={{ semana_anterior }}" class="btn btn-outline">← Semana Anterior</a>
+            <h2>{{ data_inicio|date:"d/m/Y" }} - {{ data_fim|date:"d/m/Y" }}</h2>
+            <a href="?semana={{ semana_proxima }}" class="btn btn-outline">Próxima Semana →</a>
+        </div>
+    </div>
+    
+    <!-- Agenda -->
+    <div class="card">
+        <div class="agenda-grid">
+            {% for dia in dias_semana %}
+            <div class="dia-coluna {% if dia.is_hoje %}dia-hoje{% endif %}">
+                <div class="dia-header">
+                    <span class="dia-nome">{{ dia.nome }}</span>
+                    <span class="dia-data">{{ dia.data|date:"d/m" }}</span>
+                </div>
+                <div class="dia-content">
+                    {% for evento in dia.eventos %}
+                    <div class="evento-card {% if evento.tipo == 'os' %}evento-os{% elif evento.tipo == 'test_drive' %}evento-test{% elif evento.tipo == 'manutencao' %}evento-manut{% endif %}">
+                        <div class="evento-hora">{{ evento.hora }}</div>
+                        <div class="evento-titulo">{{ evento.titulo }}</div>
+                        <div class="evento-detalhes">
+                            {% if evento.cliente %}
+                            <span>👤 {{ evento.cliente }}</span>
+                            {% endif %}
+                            {% if evento.veiculo %}
+                            <span>🚗 {{ evento.veiculo }}</span>
+                            {% endif %}
+                            {% if evento.mecanico %}
+                            <span>🔧 {{ evento.mecanico }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="evento-status">
+                            {% if evento.status == 'confirmado' %}
+                            <span class="badge badge-success">Confirmado</span>
+                            {% elif evento.status == 'pendente' %}
+                            <span class="badge badge-warning">Pendente</span>
+                            {% elif evento.status == 'em_andamento' %}
+                            <span class="badge badge-info">Em Andamento</span>
+                            {% elif evento.status == 'concluido' %}
+                            <span class="badge badge-secondary">Concluído</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="sem-eventos">
+                        <span class="text-muted">Sem eventos</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Legenda -->
+    <div class="card">
+        <h3>Legenda</h3>
+        <div class="legenda">
+            <div class="legenda-item">
+                <span class="legenda-cor evento-os"></span>
+                <span>Ordem de Serviço</span>
+            </div>
+            <div class="legenda-item">
+                <span class="legenda-cor evento-test"></span>
+                <span>Test Drive</span>
+            </div>
+            <div class="legenda-item">
+                <span class="legenda-cor evento-manut"></span>
+                <span>Manutenção Agendada</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resumo do Dia -->
+    <div class="card">
+        <h3>📊 Resumo de Hoje</h3>
+        <div class="resumo-grid">
+            <div class="resumo-item">
+                <span class="resumo-numero">{{ os_hoje|default:0 }}</span>
+                <span class="resumo-label">Ordens de Serviço</span>
+            </div>
+            <div class="resumo-item">
+                <span class="resumo-numero">{{ test_drives_hoje|default:0 }}</span>
+                <span class="resumo-label">Test Drives</span>
+            </div>
+            <div class="resumo-item">
+                <span class="resumo-numero">{{ manutencoes_hoje|default:0 }}</span>
+                <span class="resumo-label">Manutenções</span>
+            </div>
+            <div class="resumo-item">
+                <span class="resumo-numero">{{ mecanicos_disponiveis|default:0 }}</span>
+                <span class="resumo-label">Mecânicos Disponíveis</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.week-navigation h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.agenda-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    min-height: 400px;
+}
+
+.dia-coluna {
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dia-coluna.dia-hoje {
+    background: #e8f4fd;
+    border: 2px solid #3498db;
+}
+
+.dia-header {
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+.dia-hoje .dia-header {
+    background: #3498db;
+}
+
+.dia-nome {
+    display: block;
+    font-weight: bold;
+}
+
+.dia-data {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.dia-content {
+    padding: 10px;
+    min-height: 300px;
+}
+
+.evento-card {
+    background: white;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.evento-os { border-left-color: #e74c3c; }
+.evento-test { border-left-color: #27ae60; }
+.evento-manut { border-left-color: #f39c12; }
+
+.evento-hora {
+    font-weight: bold;
+    color: #3498db;
+    font-size: 0.9em;
+}
+
+.evento-titulo {
+    font-weight: 500;
+    margin: 5px 0;
+}
+
+.evento-detalhes {
+    font-size: 0.8em;
+    color: #7f8c8d;
+}
+
+.evento-detalhes span {
+    display: block;
+}
+
+.evento-status {
+    margin-top: 8px;
+}
+
+.sem-eventos {
+    text-align: center;
+    padding: 20px;
+    color: #95a5a6;
+}
+
+.legenda {
+    display: flex;
+    gap: 30px;
+    margin-top: 15px;
+}
+
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.legenda-cor {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.legenda-cor.evento-os { border-left-color: #e74c3c; background: #fdeaea; }
+.legenda-cor.evento-test { border-left-color: #27ae60; background: #e8f8f0; }
+.legenda-cor.evento-manut { border-left-color: #f39c12; background: #fef9e7; }
+
+.resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.resumo-item {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    color: white;
+}
+
+.resumo-numero {
+    display: block;
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+.resumo-label {
+    display: block;
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+@media (max-width: 1200px) {
+    .agenda-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .agenda-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}

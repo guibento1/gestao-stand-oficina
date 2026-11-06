@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Import/Export JSON - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>📥 Import/Export JSON</h1>
+    <p class="subtitle">Exporte ou importe dados do sistema em formato JSON</p>
+
+    <!-- Exportar -->
+    <div class="add-form-section" style="max-width: 800px;">
+        <h2>📤 Exportar Dados</h2>
+        <p class="text-muted" style="margin-bottom: 20px;">Clique nos botões abaixo para descarregar os dados em JSON.</p>
+        
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+            <a href="{% url 'exportar_carros' %}" class="btn">🚗 Exportar Carros</a>
+            <a href="{% url 'exportar_clientes' %}" class="btn">👥 Exportar Clientes</a>
+            <a href="{% url 'exportar_vendas' %}" class="btn">💰 Exportar Vendas</a>
+        </div>
+    </div>
+
+    <!-- Importar -->
+    <div class="add-form-section" style="max-width: 800px;">
+        <h2>📥 Importar Dados</h2>
+        <p class="text-muted" style="margin-bottom: 20px;">Carregue um ficheiro JSON para importar dados para o sistema.</p>
+        
+        <form method="post" enctype="multipart/form-data" class="form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="tipo">Tipo de Dados:</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="clientes">Clientes</option>
+                    <option value="carros">Carros</option>
+                    <option value="vendas">Vendas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ficheiro">Ficheiro JSON:</label>
+                <input type="file" id="ficheiro" name="ficheiro" accept=".json" required 
+                       style="padding: 12px; border: 2px dashed var(--primary); border-radius: 12px; width: 100%;">
+            </div>
+
+            <div class="form-actions" style="justify-content: center;">
+                <button type="submit" class="btn btn-success">📥 Importar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="info-box" style="max-width: 800px; margin: 0 auto;">
+        <h3>ℹ️ Formato JSON Esperado</h3>
+        <p style="margin-top: 10px;">Para importar dados, o ficheiro JSON deve ter o seguinte formato:</p>
+        <pre style="background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 12px; margin-top: 12px; overflow-x: auto;">
+{
+    "tipo": "vendas",
+    "dados": [
+        {
+            "cliente_id": 1,
+            "carro_id": 10,
+            "funcionario_id": 2,
+            "data": "2025-01-20",
+            "preco_final": 15000.00,
+            "forma_pagamento": "Transferência",
+            "observacoes": "Venda importada"
+        }
+    ]
+}
+        </pre>
+    </div>
+</div>
+{% endblock %}

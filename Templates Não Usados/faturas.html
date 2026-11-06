@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Faturas - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🧾 Gestão de Faturas</h1>
+    
+    <!-- Filtros -->
+    <div class="card">
+        <h2>Filtros</h2>
+        <form method="GET" class="filter-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="data_inicio">Data Início:</label>
+                    <input type="date" id="data_inicio" name="data_inicio" value="{{ filtro_data_inicio }}">
+                </div>
+                <div class="form-group">
+                    <label for="data_fim">Data Fim:</label>
+                    <input type="date" id="data_fim" name="data_fim" value="{{ filtro_data_fim }}">
+                </div>
+                <div class="form-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status">
+                        <option value="">Todos</option>
+                        <option value="pendente" {% if filtro_status == 'pendente' %}selected{% endif %}>Pendente</option>
+                        <option value="paga" {% if filtro_status == 'paga' %}selected{% endif %}>Paga</option>
+                        <option value="cancelada" {% if filtro_status == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Faturas -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Faturas</h2>
+            <button onclick="window.print()" class="btn btn-secondary">🖨️ Imprimir</button>
+        </div>
+        
+        {% if faturas %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nº Fatura</th>
+                        <th>Data Emissão</th>
+                        <th>Cliente</th>
+                        <th>NIF</th>
+                        <th>Descrição</th>
+                        <th>Valor Base</th>
+                        <th>IVA</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fatura in faturas %}
+                    <tr>
+                        <td><strong>{{ fatura.numero }}</strong></td>
+                        <td>{{ fatura.data_emissao }}</td>
+                        <td>{{ fatura.cliente_nome }}</td>
+                        <td>{{ fatura.nif }}</td>
+                        <td>{{ fatura.descricao|truncatechars:30 }}</td>
+                        <td>€{{ fatura.valor_base|floatformat:2 }}</td>
+                        <td>€{{ fatura.iva|floatformat:2 }}</td>
+                        <td><strong>€{{ fatura.valor_total|floatformat:2 }}</strong></td>
+                        <td>
+                            {% if fatura.status == 'pendente' %}
+                            <span class="badge badge-warning">Pendente</span>
+                            {% elif fatura.status == 'paga' %}
+                            <span class="badge badge-success">Paga</span>
+                            {% elif fatura.status == 'cancelada' %}
+                            <span class="badge badge-danger">Cancelada</span>
+                            {% else %}
+                            <span class="badge">{{ fatura.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <a href="{% url 'fatura_pdf' fatura.id %}" class="btn btn-sm btn-primary" title="Download PDF">📄</a>
+                            {% if fatura.status == 'pendente' %}
+                            <form method="POST" action="{% url 'marcar_fatura_paga' fatura.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Marcar como Paga">✓</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="7"><strong>TOTAL</strong></td>
+                        <td><strong>€{{ total_faturas|floatformat:2 }}</strong></td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <!-- Resumo -->
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card pendente">
+                    <span class="stat-number">{{ pendentes|default:0 }}</span>
+                    <span class="stat-text">Pendentes</span>
+                </div>
+                <div class="stat-card paga">
+                    <span class="stat-number">{{ pagas|default:0 }}</span>
+                    <span class="stat-text">Pagas</span>
+                </div>
+                <div class="stat-card cancelada">
+                    <span class="stat-number">{{ canceladas|default:0 }}</span>
+                    <span class="stat-text">Canceladas</span>
+                </div>
+                <div class="stat-card total">
+                    <span class="stat-number">€{{ valor_pendente|floatformat:0 }}</span>
+                    <span class="stat-text">A Receber</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Nenhuma fatura encontrada com os critérios selecionados.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filter-form .form-grid {
+    margin-bottom: 15px;
+}
+
+.total-row {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+.stats-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+}
+
+.stat-card.pendente { background: #f39c12; }
+.stat-card.paga { background: #27ae60; }
+.stat-card.cancelada { background: #e74c3c; }
+.stat-card.total { background: #3498db; }
+
+.stat-number {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.stat-text {
+    display: block;
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+
+@media print {
+    .filter-form, .actions, .card-header button { display: none; }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Vendas - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>💰 Vendas</h1>
+
+    {% if pode_registar %}
+    <div class="add-form-section">
+        <h2>
+            <span>➕ Registar Nova Venda</span>
+            <button onclick="toggleForm()" class="btn btn-sm" id="toggleBtn">➕ Abrir Formulário</button>
+        </h2>
+
+        <div id="formContainer" class="collapsible-content">
+            <form method="post" class="form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="adicionar">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cliente_id">Cliente:</label>
+                        <select id="cliente_id" name="cliente_id" required>
+                            <option value="">-- Selecione um cliente --</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="carro_id">Carro:</label>
+                        <select id="carro_id" name="carro_id" required>
+                            <option value="">-- Selecione um carro --</option>
+                            {% for carro in carros %}
+                            <option value="{{ carro.id }}">{{ carro.info }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="preco_final">Preço Final (€):</label>
+                        <input type="number" id="preco_final" name="preco_final" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="forma_pagamento">Forma de Pagamento:</label>
+                        <select id="forma_pagamento" name="forma_pagamento">
+                            <option value="">-- Selecione --</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="cartao">Cartão</option>
+                            <option value="transferencia">Transferência</option>
+                            <option value="financiamento">Financiamento</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" onclick="toggleForm()" class="btn btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Registar Venda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de vendas -->
+    <div class="cards-grid">
+        {% for venda in vendas %}
+        <div class="card">
+            <h3>💵 Venda #{{ venda.venda_id }}</h3>
+            <p><strong>Cliente:</strong> {{ venda.cliente }}</p>
+            <p><strong>Carro:</strong> {{ venda.marca }} {{ venda.carro }}</p>
+            <p><strong>Data:</strong> {{ venda.data }}</p>
+            <p><strong>Valor:</strong> {{ venda.preco_final }}€</p>
+            {% if venda.funcionario %}
+            <p><strong>Funcionário:</strong> {{ venda.funcionario }}</p>
+            {% endif %}
+            <span class="status status-disponivel">✓ Concluída</span>
+            
+            {% if pode_registar %}
+            <div class="card-actions">
+                <form method="post" action="{% url 'eliminar_venda' venda.venda_id %}" style="display: inline;" onsubmit="return confirm('Tem a certeza que deseja eliminar esta venda?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="text-muted" style="text-align: center; width: 100%;">Nenhuma venda registada.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function toggleForm() {
+    const form = document.getElementById('formContainer');
+    const btn = document.getElementById('toggleBtn');
+    if (form.classList.contains('show')) {
+        form.classList.remove('show');
+        btn.textContent = '➕ Abrir Formulário';
+    } else {
+        form.classList.add('show');
+        btn.textContent = '➖ Fechar';
+    }
+}
+</script>
+{% endblock %}

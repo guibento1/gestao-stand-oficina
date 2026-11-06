@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestão & Relatórios - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>📊 Painel de Gestão</h1>
+    
+    <!-- Tabs de navegação -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('gestao')">🔧 Gestão</button>
+        <button class="tab" onclick="showTab('oficina')">🛠️ Oficina</button>
+        <button class="tab" onclick="showTab('relatorios')">📈 Relatórios</button>
+        <button class="tab" onclick="showTab('comercial')">💼 Comercial</button>
+    </div>
+    
+    <!-- Tab: Gestão -->
+    <div id="gestao" class="tab-content active">
+        <h3>👥 Recursos Humanos</h3>
+        <div class="quick-links">
+            <a href="{% url 'funcionarios' %}" class="quick-link">👔 Funcionários</a>
+            <a href="{% url 'mecanicos' %}" class="quick-link">🔧 Mecânicos</a>
+            <a href="{% url 'fornecedores' %}" class="quick-link">🏭 Fornecedores</a>
+        </div>
+        
+        <h3 style="margin-top:25px;">📦 Stock & Peças</h3>
+        <div class="quick-links">
+            <a href="{% url 'pecas' %}" class="quick-link">🔩 Peças</a>
+        </div>
+        
+        <div class="alert alert-info" style="margin-top:25px;">
+            <strong>ℹ️ Dados de Referência:</strong> Stands, Baias, Equipamentos e Tipos de Serviço são geridos diretamente na base de dados.
+            <br>Consulte o ficheiro <code>db/postgres/inserts.sql</code> para adicionar novos registos.
+        </div>
+    </div>
+    
+    <!-- Tab: Oficina -->
+    <div id="oficina" class="tab-content">
+        <div class="quick-links">
+            <a href="{% url 'ordens_servico' %}" class="quick-link">📋 Ordens de Serviço</a>
+            <a href="{% url 'agenda_oficina' %}" class="quick-link">📅 Agenda Oficina</a>
+            <a href="{% url 'oficina' %}" class="quick-link">🗄️ MongoDB (Diagnósticos)</a>
+            <a href="{% url 'historico_manutencao' %}" class="quick-link">📜 Histórico Manutenção</a>
+        </div>
+    </div>
+    
+    <!-- Tab: Relatórios -->
+    <div id="relatorios" class="tab-content">
+        <div class="quick-links">
+            <a href="{% url 'relatorio_financeiro' %}" class="quick-link">💰 Financeiro</a>
+            <a href="{% url 'relatorio_vendas' %}" class="quick-link">📈 Vendas</a>
+            <a href="{% url 'relatorio_clientes' %}" class="quick-link">👥 Clientes</a>
+            <a href="{% url 'relatorio_inventario' %}" class="quick-link">🚗 Inventário</a>
+            <a href="{% url 'relatorio_ordens_servico' %}" class="quick-link">🔧 Ordens Serviço</a>
+        </div>
+    </div>
+    
+    <!-- Tab: Comercial -->
+    <div id="comercial" class="tab-content">
+        <div class="quick-links">
+            <a href="{% url 'test_drives' %}" class="quick-link">🚘 Test Drives</a>
+            <a href="{% url 'orcamentos' %}" class="quick-link">📝 Orçamentos</a>
+            <a href="{% url 'pagamentos' %}" class="quick-link">💳 Pagamentos</a>
+            <a href="{% url 'garantias' %}" class="quick-link">🛡️ Garantias</a>
+            <a href="{% url 'faturas' %}" class="quick-link">🧾 Faturas</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+.quick-link {
+    padding: 14px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.quick-link:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+</style>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

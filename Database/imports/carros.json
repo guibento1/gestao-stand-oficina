@@ -1,0 +1,28 @@
+{
+  "tipo": "carros",
+  "total": 1,
+  "data_exportacao": "2026-01-20 19:26:01.614637",
+  "dados": [
+    {
+      "carro_id": 20,
+      "stand_id": 1,
+      "marca_id": 24,
+      "modelo": "Modelo Teste",
+      "ano": 2000,
+      "preço": "1.00",
+      "estado": "novo",
+      "quilometragem": 0,
+      "cor": null,
+      "chassi": null,
+      "placa": null,
+      "status_disponibilidade": "disponivel",
+      "data_aquisicao": "2026-01-20",
+      "combustivel": null,
+      "potencia": null,
+      "cilindrada": null,
+      "portas": null,
+      "lugares": null,
+      "ref_imagem_capa": "null"
+    }
+  ]
+}

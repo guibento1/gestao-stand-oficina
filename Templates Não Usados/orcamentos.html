@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Orçamentos - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>📝 Orçamentos</h1>
+    
+    <!-- Formulário de Criar -->
+    <div class="card form-card">
+        <h2>Criar Orçamento</h2>
+        <form method="POST" action="{% url 'orcamentos' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cliente_id">Cliente *</label>
+                    <select id="cliente_id" name="cliente_id" required>
+                        <option value="">Selecione...</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="carro_id">Carro (opcional)</label>
+                    <select id="carro_id" name="carro_id">
+                        <option value="">Selecione...</option>
+                        {% for carro in carros %}
+                        <option value="{{ carro.id }}">{{ carro.info }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="valor_total">Valor Total (€) *</label>
+                    <input type="number" id="valor_total" name="valor_total" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="validade">Válido até *</label>
+                    <input type="date" id="validade" name="validade" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="descricao">Descrição *</label>
+                    <textarea id="descricao" name="descricao" rows="3" required placeholder="Descreva os serviços/produtos incluídos..."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Criar Orçamento</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Orçamentos Pendentes -->
+    <div class="card">
+        <h2>Orçamentos Pendentes</h2>
+        {% if orcamentos %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Carro</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Validade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orc in orcamentos %}
+                    <tr {% if orc.expirado %}class="row-danger"{% endif %}>
+                        <td>#{{ orc.orcamento_id }}</td>
+                        <td>{{ orc.data_orcamento|date:"d/m/Y" }}</td>
+                        <td>{{ orc.cliente }}</td>
+                        <td>{{ orc.carro|default:'-' }}</td>
+                        <td>{{ orc.descricao|truncatewords:10 }}</td>
+                        <td>€{{ orc.valor_total }}</td>
+                        <td>{{ orc.validade }}</td>
+                        <td>
+                            {% if orc.expirado %}
+                            <span class="badge badge-danger">Expirado</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not orc.expirado %}
+                            <form method="POST" action="{% url 'aprovar_orcamento' orc.orcamento_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <label style="font-size:0.8em;"><input type="checkbox" name="gerar_os"> Gerar OS</label>
+                                <button type="submit" class="btn btn-small btn-success">✅ Aprovar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhum orçamento pendente.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

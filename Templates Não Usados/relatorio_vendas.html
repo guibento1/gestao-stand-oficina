@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório de Vendas - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🚗 Relatório de Vendas</h1>
+    
+    <div class="card">
+        <div class="report-header">
+            <h2>Vendas Detalhadas</h2>
+            <div class="report-actions">
+                <button onclick="window.print()" class="btn btn-secondary">🖨️ Imprimir</button>
+                <a href="{% url 'relatorios' %}" class="btn btn-outline">← Voltar</a>
+            </div>
+        </div>
+        
+        {% if dados %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data Venda</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Marca/Modelo</th>
+                        <th>Ano</th>
+                        <th>Cor</th>
+                        <th>Valor (€)</th>
+                        <th>Vendedor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in dados %}
+                    <tr>
+                        <td>{{ venda.id }}</td>
+                        <td>{{ venda.data_venda }}</td>
+                        <td>{{ venda.cliente_nome }}</td>
+                        <td>{{ venda.matricula }}</td>
+                        <td><strong>{{ venda.marca }} {{ venda.modelo }}</strong></td>
+                        <td>{{ venda.ano }}</td>
+                        <td>{{ venda.cor }}</td>
+                        <td><strong>€{{ venda.valor|floatformat:2 }}</strong></td>
+                        <td>{{ venda.vendedor|default:'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="7"><strong>TOTAL</strong></td>
+                        <td colspan="2"><strong>€{{ total_vendas|floatformat:2 }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <!-- Estatísticas -->
+        <div class="stats-section">
+            <h3>📊 Estatísticas de Vendas</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">{{ dados|length }}</span>
+                    <span class="stat-text">Vendas Realizadas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">€{{ media_venda|floatformat:0 }}</span>
+                    <span class="stat-text">Valor Médio</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">€{{ total_vendas|floatformat:0 }}</span>
+                    <span class="stat-text">Receita Total</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Nenhuma venda registada no sistema.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.total-row {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+.stats-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    color: white;
+}
+
+.stats-section h3 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.stat-text {
+    display: block;
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+@media print {
+    .report-actions { display: none; }
+    .stats-section { 
+        background: #f8f9fa; 
+        color: #333;
+    }
+}
+</style>
+{% endblock %}

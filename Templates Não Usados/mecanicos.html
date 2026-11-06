@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Mecânicos - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🔧 Gestão de Mecânicos</h1>
+    
+    <!-- Formulário de Adicionar -->
+    <div class="card form-card">
+        <h2>Contratar Mecânico</h2>
+        <form method="POST" action="{% url 'mecanicos' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nome">Nome *</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="especialidade">Especialidade *</label>
+                    <select id="especialidade" name="especialidade" required>
+                        <option value="">Selecione...</option>
+                        <option value="Motor">Motor</option>
+                        <option value="Elétrica">Elétrica</option>
+                        <option value="Suspensão">Suspensão</option>
+                        <option value="Travões">Travões</option>
+                        <option value="Ar Condicionado">Ar Condicionado</option>
+                        <option value="Geral">Geral</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="telefone">Telefone *</label>
+                    <input type="text" id="telefone" name="telefone" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                <div class="form-group">
+                    <label for="stand_id">Stand *</label>
+                    <select id="stand_id" name="stand_id" required>
+                        <option value="">Selecione...</option>
+                        {% for stand in stands %}
+                        <option value="{{ stand.id }}">{{ stand.nome }} - {{ stand.localizacao }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="salario">Salário</label>
+                    <input type="number" id="salario" name="salario" step="0.01" min="0">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Contratar Mecânico</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Mecânicos -->
+    <div class="card">
+        <h2>Lista de Mecânicos (Disponibilidade)</h2>
+        {% if mecanicos %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Especialidade</th>
+                        <th>Telefone</th>
+                        <th>Stand</th>
+                        <th>OS em Andamento</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mec in mecanicos %}
+                    <tr>
+                        <td>{{ mec.nome }}</td>
+                        <td><span class="badge badge-info">{{ mec.especialidade }}</span></td>
+                        <td>{{ mec.telefone }}</td>
+                        <td>{{ mec.stand_nome }}</td>
+                        <td>
+                            {% if mec.os_em_andamento > 0 %}
+                            <span class="badge badge-warning">{{ mec.os_em_andamento }} OS</span>
+                            {% else %}
+                            <span class="badge badge-success">Disponível</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <a href="{% url 'editar_mecanico' mec.mecanico_id %}" class="btn btn-small btn-secondary">✏️ Editar</a>
+                            <form method="POST" action="{% url 'eliminar_mecanico' mec.mecanico_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Tem certeza?')">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhum mecânico registado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

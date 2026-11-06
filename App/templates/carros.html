@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Carros - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>🚗 Carros</h1>
+
+    {% if pode_gerir %}
+    <div class="section-box">
+        <div class="section-header" onclick="toggleSection('addForm')">
+            <h2>➕ Adicionar Novo Carro</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div id="addForm" class="section-content hidden">
+            <form method="post" enctype="multipart/form-data" class="form-grid">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Stand:</label>
+                    <select name="standid" required>
+                        <option value="">Selecione...</option>
+                        {% for stand in stands %}
+                        <option value="{{ stand.stand_id }}">{{ stand.localizacao }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Marca:</label>
+                    <select name="marcaid" required>
+                        <option value="">Selecione...</option>
+                        {% for marca in marcas %}
+                        <option value="{{ marca.marca_id }}">{{ marca.m_nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Modelo:</label>
+                    <input type="text" name="modelo" required>
+                </div>
+                <div class="form-group">
+                    <label>Ano:</label>
+                    <input type="number" name="ano" min="1900" max="2026" required>
+                </div>
+                <div class="form-group">
+                    <label>Preço (€):</label>
+                    <input type="number" name="preco" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Estado:</label>
+                    <select name="estado" required>
+                        <option value="novo">Novo</option>
+                        <option value="seminovo">Seminovo</option>
+                        <option value="usado">Usado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Imagem de Capa:</label>
+                    <input type="file" name="imagem_capa" accept="image/*">
+                    <small class="text-muted">Opcional: imagem principal do carro</small>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de carros -->
+    <div class="cards-grid">
+
+        {% for carro in carros %}
+        <div class="card">
+            {% if carro.imagem_capa %}
+                <img src="{{ carro.imagem_capa }}" alt="Imagem capa" class="carro-capa" style="width:100%;max-height:180px;object-fit:cover;">
+            {% else %}
+                <div class="carro-icon" style="font-size:48px;text-align:center;">🚗</div>
+            {% endif %}
+            <h3>{{ carro.marca }} {{ carro.modelo }}</h3>
+            <p><strong>Ano:</strong> {{ carro.ano }}</p>
+            <p><strong>Preço:</strong> {{ carro.preço|floatformat:2 }} €</p>
+            <p><strong>Stand:</strong> {{ carro.stand }}</p>
+            <p><strong>Estado:</strong> {{ carro.estado|capfirst }}</p>
+            {% if carro.status_disponibilidade == 'disponivel' %}
+            <span class="badge badge-success">Disponível</span>
+            {% elif carro.status_disponibilidade == 'reservado' %}
+            <span class="badge badge-warning">Reservado</span>
+            {% elif carro.status_disponibilidade == 'vendido' %}
+            <span class="badge badge-danger">Vendido</span>
+            {% elif carro.status_disponibilidade == 'em_manutencao' %}
+            <span class="badge badge-info">Em Manutenção</span>
+            {% endif %}
+
+            <div class="card-actions">
+                <a href="{% url 'detalhes_carro' carro.carro_id %}" class="btn btn-sm btn-info">🔍 Ver detalhes</a>
+                {% if pode_editar_carros %}
+                <button onclick="openModal('editModal{{ carro.carro_id }}')" class="btn btn-sm">✏️ Editar</button>
+                <form method="post" action="{% url 'eliminar_carro' carro.carro_id %}" style="display:inline;" onsubmit="return confirm('Eliminar este carro?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Modal Detalhes do Carro -->
+        <div id="detalhesModal{{ carro.carro_id }}" class="modal hidden">
+            <div class="modal-content" style="max-width:900px;">
+                <div class="modal-header">
+                    <h3>Detalhes: {{ carro.marca }} {{ carro.modelo }}</h3>
+                    <button onclick="closeModal('detalhesModal{{ carro.carro_id }}')" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body" style="display:flex;gap:32px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:260px;">
+                        <ul style="list-style:none;padding:0;">
+                            <li><strong>ID:</strong> {{ carro.carro_id }}</li>
+                            <li><strong>Marca:</strong> {{ carro.marca_id }}</li>
+                            <li><strong>Modelo:</strong> {{ carro.modelo }}</li>
+                            <li><strong>Ano:</strong> {{ carro.ano }}</li>
+                            <li><strong>Preço:</strong> {{ carro.preço|floatformat:2 }} €</li>
+                            <li><strong>Estado:</strong> {{ carro.estado }}</li>
+                            <li><strong>Quilometragem:</strong> {{ carro.quilometragem }}</li>
+                            <li><strong>Cor:</strong> {{ carro.cor }}</li>
+                            <li><strong>Chassi:</strong> {{ carro.chassi }}</li>
+                            <li><strong>Placa:</strong> {{ carro.placa }}</li>
+                            <li><strong>Status:</strong> {{ carro.status_disponibilidade }}</li>
+                            <li><strong>Data Aquisição:</strong> {{ carro.data_aquisicao }}</li>
+                            <li><strong>Combustível:</strong> {{ carro.combustivel }}</li>
+                            <li><strong>Potência:</strong> {{ carro.potencia }}</li>
+                            <li><strong>Cilindrada:</strong> {{ carro.cilindrada }}</li>
+                            <li><strong>Portas:</strong> {{ carro.portas }}</li>
+                            <li><strong>Lugares:</strong> {{ carro.lugares }}</li>
+                        </ul>
+                        {% if user.is_staff %}
+                        <form method="post" action="{% url 'upload_imagem_carro' carro.carro_id %}" enctype="multipart/form-data" style="margin-top:16px;">
+                            {% csrf_token %}
+                            <label><strong>Adicionar imagem:</strong></label>
+                            <input type="file" name="imagem" accept="image/*" required>
+                            <input type="text" name="descricao" placeholder="Descrição (opcional)" style="width:100%;margin-top:4px;">
+                            <label style="font-size:12px;"><input type="checkbox" name="is_capa"> Definir como capa</label>
+                            <button type="submit" class="btn btn-sm btn-primary" style="margin-top:4px;">Upload</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <div style="flex:2;min-width:320px;">
+                        <div class="carro-galeria" style="display:flex;gap:8px;flex-wrap:wrap;">
+                                {% for img in carro.imagens %}
+                                <div style="border:1px solid #eee;padding:4px;max-width:140px;">
+                                    <img src="{{ img.sas_url|default:img.blob_name }}" alt="Imagem carro" style="width:100%;max-width:130px;max-height:100px;object-fit:cover;">
+                                    <div style="font-size:12px;color:#666;">{{ img.descricao }}</div>
+                                    <div style="font-size:10px;color:#aaa;">{{ img.created_at|date:'d/m/Y H:i' }}</div>
+                                    {% if img.is_capa %}<span class="badge badge-info">Capa</span>{% endif %}
+                                    {% if user.is_staff %}
+                                    <form method="post" action="{% url 'eliminar_imagem_carro' img.imagem_id %}" style="margin-top:4px;" onsubmit="return confirm('Eliminar esta imagem?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-xs btn-danger">🗑️</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                <span class="text-muted">Sem imagens.</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Edição -->
+        {% if pode_editar_carros %}
+        <div id="editModal{{ carro.carro_id }}" class="modal hidden">
+            <div class="modal-content" style="max-width:95vw; max-height:95vh; overflow:auto;">
+                <div class="modal-header">
+                    <h3>✏️ Editar {{ carro.marca }} {{ carro.modelo }}</h3>
+                    <button onclick="closeModal('editModal{{ carro.carro_id }}')" class="modal-close">&times;</button>
+                </div>
+                <form method="post" action="{% url 'editar_carro' carro.carro_id %}">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Stand:</label>
+                            <select name="stand_id" required>
+                                {% for stand in stands %}
+                                <option value="{{ stand.stand_id }}" {% if stand.stand_id == carro.stand_id %}selected{% endif %}>{{ stand.localizacao }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Marca:</label>
+                            <select name="marca_id" required>
+                                {% for marca in marcas %}
+                                <option value="{{ marca.marca_id }}" {% if marca.marca_id == carro.marca_id %}selected{% endif %}>{{ marca.m_nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Modelo:</label>
+                            <input type="text" name="modelo" value="{{ carro.modelo }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ano:</label>
+                            <input type="number" name="ano" value="{{ carro.ano }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Preço (€):</label>
+                            <input type="number" name="preco" value="{{ carro.preço }}" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado:</label>
+                            <select name="estado" required>
+                                <option value="novo" {% if carro.estado == 'novo' %}selected{% endif %}>Novo</option>
+                                <option value="seminovo" {% if carro.estado == 'seminovo' %}selected{% endif %}>Seminovo</option>
+                                <option value="usado" {% if carro.estado == 'usado' %}selected{% endif %}>Usado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quilometragem:</label>
+                            <input type="number" name="quilometragem" value="{{ carro.quilometragem|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Cor:</label>
+                            <input type="text" name="cor" value="{{ carro.cor|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Chassi:</label>
+                            <input type="text" name="chassi" value="{{ carro.chassi|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Placa:</label>
+                            <input type="text" name="placa" value="{{ carro.placa|default:'' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status Disponibilidade:</label>
+                            <select name="status_disponibilidade">
+                                <option value="disponivel" {% if carro.status_disponibilidade == 'disponivel' %}selected{% endif %}>Disponível</option>
+                                <option value="reservado" {% if carro.status_disponibilidade == 'reservado' %}selected{% endif %}>Reservado</option>
+                                <option value="vendido" {% if carro.status_disponibilidade == 'vendido' %}selected{% endif %}>Vendido</option>
+                                <option value="em_manutencao" {% if carro.status_disponibilidade == 'em_manutencao' %}selected{% endif %}>Em Manutenção</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Data Aquisição:</label>
+                            <input type="date" name="data_aquisicao" value="{{ carro.data_aquisicao|date:'Y-m-d' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Combustível:</label>
+                            <select name="combustivel">
+                                <option value="" {% if not carro.combustivel %}selected{% endif %}>---</option>
+                                <option value="gasolina" {% if carro.combustivel == 'gasolina' %}selected{% endif %}>Gasolina</option>
+                                <option value="diesel" {% if carro.combustivel == 'diesel' %}selected{% endif %}>Diesel</option>
+                                <option value="eletrico" {% if carro.combustivel == 'eletrico' %}selected{% endif %}>Elétrico</option>
+                                <option value="hibrido" {% if carro.combustivel == 'hibrido' %}selected{% endif %}>Híbrido</option>
+                                <option value="gpl" {% if carro.combustivel == 'gpl' %}selected{% endif %}>GPL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Potência:</label>
+                            <input type="number" name="potencia" value="{{ carro.potencia|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Cilindrada:</label>
+                            <input type="number" name="cilindrada" value="{{ carro.cilindrada|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Portas:</label>
+                            <input type="number" name="portas" value="{{ carro.portas|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Lugares:</label>
+                            <input type="number" name="lugares" value="{{ carro.lugares|default:'' }}">
+                        </div>
+
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" onclick="closeModal('editModal{{ carro.carro_id }}')" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">💾 Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% empty %}
+        <p class="text-muted" style="text-align:center;width:100%;">Nenhum carro disponível.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function toggleSection(id) {
+    document.getElementById(id).classList.toggle('hidden');
+}
+function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+}
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+document.querySelectorAll('.modal').forEach(m => {
+    m.addEventListener('click', e => { if(e.target === m) m.classList.add('hidden'); });
+});
+</script>
+{% endblock %}

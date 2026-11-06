@@ -1,0 +1,81 @@
+{
+  "ordem_servico_id": 456,
+  "carro_id": 123,
+  "scanner_data": {
+    "marca_scanner": "OBD-PRO 3000",
+    "protocolo": "ISO 15765-4 (CAN)",
+    "vin": "WBADT43452G123456",
+    "dtcs": [
+      {
+        "codigo": "P0420",
+        "descricao": "Catalyst System Efficiency Below Threshold (Bank 1)",
+        "status": "permanent",
+        "odometro": 45230,
+        "data_deteccao": { "$date": "2025-10-28T14:20:00Z" }
+      }
+    ],
+    "parametros_live": {
+      "rpm": 850,
+      "temperatura_motor": 92,
+      "temperatura_ar_admissao": 25,
+      "velocidade": 0,
+      "nivel_combustivel": 75,
+      "pressao_oleo": 3.5,
+      "voltagem_bateria": 12.8,
+      "tempo_motor_ligado": 3600
+    },
+    "readiness_monitors": {
+      "catalyst": "not_ready",
+      "oxygen_sensor": "ready",
+      "evaporative_system": "ready",
+      "egr_system": "ready"
+    }
+  },
+  "codigos_erro": [
+    {
+      "codigo": "P0420",
+      "tipo": "powertrain",
+      "gravidade": "moderada",
+      "descricao_tecnica": "Catalisador (banco 1) com eficiência abaixo do limiar esperado. Sistema de controle de emissões comprometido.",
+      "causas_possiveis": [
+        "Catalisador danificado ou saturado",
+        "Sensor de oxigênio pós-catalisador com falha",
+        "Vazamento no sistema de escape antes do catalisador",
+        "Mistura ar/combustível inadequada (muito rica ou pobre)",
+        "Desgaste natural por quilometragem elevada"
+      ],
+      "impacto": "Aumento nas emissões de poluentes. Veículo pode não passar na inspeção anual."
+    }
+  ],
+  "recomendacoes": [
+    {
+      "prioridade": "alta",
+      "descricao": "Verificar integridade do catalisador e testar sensores de oxigênio (upstream e downstream)",
+      "custo_estimado": 800.00,
+      "prazo": "urgente",
+      "pecas_necessarias": ["Catalisador", "Sensor O2 (se necessário)"]
+    },
+    {
+      "prioridade": "media",
+      "descricao": "Realizar teste de emissões para avaliar nível de poluentes",
+      "custo_estimado": 50.00,
+      "prazo": "1_semana",
+      "pecas_necessarias": []
+    },
+    {
+      "prioridade": "baixa",
+      "descricao": "Verificar sistema de ignição e injeção para otimizar mistura ar/combustível",
+      "custo_estimado": 120.00,
+      "prazo": "2_semanas",
+      "pecas_necessarias": ["Velas de ignição (se desgastadas)"]
+    }
+  ],
+  "mecanico": {
+    "mecanico_id": 12,
+    "nome": "João Silva",
+    "especialidade": "Diagnóstico eletrônico",
+    "certificacoes": ["ASE Certified", "Bosch Diagnostics Level 3"]
+  },
+  "timestamp": { "$date": "2025-11-05T09:15:00Z" },
+  "duracao_diagnostico_minutos": 45
+}

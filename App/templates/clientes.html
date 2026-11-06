@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Clientes - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>👥 Clientes</h1>
+
+    {% if user.is_staff %}
+    <div class="section-box">
+        <div class="section-header" onclick="toggleSection('addForm')">
+            <h2>➕ Adicionar Novo Cliente</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div id="addForm" class="section-content hidden">
+            <form method="post" class="form-grid">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Nome:</label>
+                    <input type="text" name="c_nome" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" name="c_email" required>
+                </div>
+                <div class="form-group">
+                    <label>Telefone:</label>
+                    <input type="text" name="c_telefone" required>
+                </div>
+                <div class="form-group">
+                    <label>NIF:</label>
+                    <input type="text" name="nif" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de clientes -->
+    <div class="cards-grid">
+        {% for cliente in clientes %}
+        <div class="card">
+            <h3>👤 {{ cliente.c_nome }}</h3>
+            <p><strong>Email:</strong> {{ cliente.c_email }}</p>
+            <p><strong>Telefone:</strong> {{ cliente.c_telefone }}</p>
+            <p><strong>NIF:</strong> {{ cliente.nif }}</p>
+            <p><strong>Vendas:</strong> <span class="badge badge-info">{{ cliente.total_vendas|default:0 }}</span></p>
+            
+            {% if pode_editar_clientes %}
+            <div class="card-actions">
+                <button onclick="openModal('editModal{{ cliente.cliente_id }}')" class="btn btn-sm">✏️ Editar</button>
+                <form method="post" action="{% url 'eliminar_cliente' cliente.cliente_id %}" style="display:inline;" onsubmit="return confirm('Eliminar cliente?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Modal de Edição -->
+        {% if pode_editar_clientes %}
+        <div id="editModal{{ cliente.cliente_id }}" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>✏️ Editar {{ cliente.c_nome }}</h3>
+                    <button onclick="closeModal('editModal{{ cliente.cliente_id }}')" class="modal-close">&times;</button>
+                </div>
+                <form method="post" action="{% url 'editar_cliente' cliente.cliente_id %}">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome:</label>
+                            <input type="text" name="c_nome" value="{{ cliente.c_nome }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email:</label>
+                            <input type="email" name="c_email" value="{{ cliente.c_email }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone:</label>
+                            <input type="text" name="c_telefone" value="{{ cliente.c_telefone }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>NIF:</label>
+                            <input type="text" name="nif" value="{{ cliente.nif }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" onclick="closeModal('editModal{{ cliente.cliente_id }}')" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">💾 Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% empty %}
+        <p class="text-muted" style="text-align:center;width:100%;">Nenhum cliente registado.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function toggleSection(id) { document.getElementById(id).classList.toggle('hidden'); }
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+document.querySelectorAll('.modal').forEach(m => {
+    m.addEventListener('click', e => { if(e.target === m) m.classList.add('hidden'); });
+});
+</script>
+{% endblock %}

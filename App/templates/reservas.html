@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Reservas - Auto Care Stand{% endblock %}
+
+{% block content %}
+<div class="page">
+    <h1>📅 Reservas</h1>
+
+    <div class="add-form-section">
+        <h2>
+            <span>➕ Criar Nova Reserva</span>
+            <button onclick="toggleForm()" class="btn btn-sm" id="toggleBtn">➕ Abrir Formulário</button>
+        </h2>
+
+        <div id="formContainer" class="collapsible-content">
+            <form method="post" class="form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="adicionar">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cliente_id">Cliente:</label>
+                        {% if cliente_logado %}
+                        <!-- Cliente logado - mostrar nome e usar ID automaticamente -->
+                        <input type="text" value="{{ cliente_logado.nome }}" disabled class="form-control">
+                        <input type="hidden" name="cliente_id" value="{{ cliente_logado.id }}">
+                        {% else %}
+                        <!-- Staff pode escolher cliente -->
+                        <select id="cliente_id" name="cliente_id" required>
+                            <option value="">-- Selecione um cliente --</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="carro_id">Carro:</label>
+                        <select id="carro_id" name="carro_id" required>
+                            <option value="">-- Selecione um carro --</option>
+                            {% for carro in carros %}
+                            <option value="{{ carro.id }}">{{ carro.info }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" onclick="toggleForm()" class="btn btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Criar Reserva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de reservas -->
+    <div class="cards-grid">
+        {% for reserva in reservas %}
+        <div class="card">
+            <h3>📋 Reserva #{{ reserva.reserva_id }}</h3>
+            <p><strong>Cliente:</strong> {{ reserva.cliente_nome }}</p>
+            <p><strong>Carro:</strong> {{ reserva.carro_modelo }} ({{ reserva.carro_ano }})</p>
+            <p><strong>Data:</strong> {{ reserva.data_reserva }}</p>
+            <span class="status status-{{ reserva.estado_reserva|lower|default:'pendente' }}">
+                {{ reserva.estado_reserva|default:'Pendente' }}
+            </span>
+            
+            <div class="card-actions">
+                {% if user.is_staff %}
+                <a href="{% url 'editar_reserva' reserva.reserva_id %}" class="btn btn-sm">✏️ Editar</a>
+                {% endif %}
+                <form method="post" action="{% url 'eliminar_reserva' reserva.reserva_id %}" style="display: inline;" onsubmit="return confirm('Tem a certeza que deseja eliminar esta reserva?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Eliminar</button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted" style="text-align: center; width: 100%;">Nenhuma reserva registada.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function toggleForm() {
+    const form = document.getElementById('formContainer');
+    const btn = document.getElementById('toggleBtn');
+    if (form.classList.contains('show')) {
+        form.classList.remove('show');
+        btn.textContent = '➕ Abrir Formulário';
+    } else {
+        form.classList.add('show');
+        btn.textContent = '➖ Fechar';
+    }
+}
+</script>
+{% endblock %}

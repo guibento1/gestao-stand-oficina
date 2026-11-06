@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Fornecedores - Auto Care{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>🏭 Gestão de Fornecedores</h1>
+    
+    <!-- Formulário de Adicionar -->
+    <div class="card form-card">
+        <h2>Adicionar Fornecedor</h2>
+        <form method="POST" action="{% url 'fornecedores' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="f_nome">Nome *</label>
+                    <input type="text" id="f_nome" name="f_nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_contacto">Contacto *</label>
+                    <input type="text" id="f_contacto" name="f_contacto" required>
+                </div>
+                <div class="form-group">
+                    <label for="f_email">Email *</label>
+                    <input type="email" id="f_email" name="f_email" required>
+                </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo *</label>
+                    <select id="tipo" name="tipo" required>
+                        <option value="">Selecione...</option>
+                        <option value="carros">Carros</option>
+                        <option value="pecas">Peças</option>
+                        <option value="ambos">Ambos</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">➕ Adicionar Fornecedor</button>
+        </form>
+    </div>
+    
+    <!-- Lista de Fornecedores -->
+    <div class="card">
+        <h2>Lista de Fornecedores</h2>
+        {% if fornecedores %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Contacto</th>
+                        <th>Email</th>
+                        <th>Tipo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forn in fornecedores %}
+                    <tr>
+                        <td>{{ forn.f_nome }}</td>
+                        <td>{{ forn.f_contacto }}</td>
+                        <td>{{ forn.f_email }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if forn.tipo == 'carros' %}badge-info
+                                {% elif forn.tipo == 'pecas' %}badge-warning
+                                {% else %}badge-success{% endif %}">{{ forn.tipo }}</span>
+                        </td>
+                        <td class="actions">
+                            <a href="{% url 'editar_fornecedor' forn.fornecedor_id %}" class="btn btn-small btn-secondary">✏️ Editar</a>
+                            <form method="POST" action="{% url 'eliminar_fornecedor' forn.fornecedor_id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Tem certeza?')">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-message">Nenhum fornecedor registado.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
